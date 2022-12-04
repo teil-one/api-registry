@@ -2,21 +2,22 @@
   "name": "api-registry",
   "version": "0.1.1",
   "description": "Promise based centralized HTTP API client for the browser and node.js",
-  "main": "lib/index.js",
-  "types": "lib/index.d.js",
+  "main": "index.js",
+  "types": "index.d.js",
   "scripts": {
     "build": "rimraf lib && tsc",
-    "postbuild": "shx cp package.json lib",
     "lint": "npx eslint .",
     "prettier": "npx prettier --write .",
     "prettier:check": "npx prettier --check .",
     "test": "npm run lint && npm run prettier:check && jest",
-    "preversion": "npm run lint && npm run prettier:check",
-    "prepub": "npm test & npm run build",
-    "pub": "npm publish ./lib"
+    "prepublishOnly": "npm test",
+    "prepare": "npm run build && shx ln -sf lib/index.js index.js && shx ln -sf lib/index.d.ts index.d.ts",
+    "postpack": "shx rm index.js && shx rm index.d.ts",
+    "preversion": "npm test"
   },
   "files": [
-    "lib/**/*"
+    "index.js",
+    "index.d.ts"
   ],
   "repository": {
     "type": "git",
