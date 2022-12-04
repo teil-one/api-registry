@@ -1,0 +1,17 @@
+{
+  "roots": ["<rootDir>/src"],
+  "preset": "ts-jest",
+  "clearMocks": true,
+  "collectCoverage": true,
+  "coverageDirectory": "coverage",
+  "coverageProvider": "v8",
+  "transform": {
+    "^.+\\.tsx?$": [
+      "ts-jest",
+      {
+        "teeest": 2134,
+        "tsconfig": "tsconfig.jest.json"
+      }
+    ]
+  }
+}
