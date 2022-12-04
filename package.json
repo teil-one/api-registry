@@ -11,7 +11,7 @@
     "prettier:check": "npx prettier --check .",
     "test": "npm run lint && npm run prettier:check && jest",
     "prepublishOnly": "npm test",
-    "prepare": "npm run build && shx ln -sf lib/index.js index.js && shx ln -sf lib/index.d.ts index.d.ts",
+    "prepare": "npm run build && shx ln -f lib/index.js index.js && shx ln -f lib/index.d.ts index.d.ts",
     "postpack": "shx rm index.js && shx rm index.d.ts",
     "preversion": "npm test"
   },
