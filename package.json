@@ -5,20 +5,27 @@
   "main": "index.js",
   "types": "index.d.js",
   "type": "module",
+  "exports": {
+    ".": {
+      "import": "./index.js",
+      "require": "./index.cjs"
+    }
+  },
   "scripts": {
-    "build": "rimraf lib && tsc",
+    "build": "rimraf lib && tsc && tsc -p tsconfig.cjs.json",
     "lint": "npx eslint .",
     "prettier": "npx prettier --write .",
     "prettier:check": "npx prettier --check .",
     "test": "npm run lint && npm run prettier:check && cross-env NODE_OPTIONS=--experimental-vm-modules jest",
     "prepublishOnly": "npm test",
-    "prepare": "npm run build && shx ln -f lib/index.js index.js && shx ln -f lib/index.d.ts index.d.ts",
-    "postpack": "shx rm index.js && shx rm index.d.ts",
+    "prepare": "npm run build && shx ln -f lib/mjs/index.js index.js && shx ln -f lib/mjs/index.d.ts index.d.ts && shx ln -f lib/cjs/index.js index.cjs",
+    "postpack": "shx rm index.js && shx rm index.d.ts && shx rm index.cjs",
     "preversion": "npm test"
   },
   "files": [
     "index.js",
-    "index.d.ts"
+    "index.d.ts",
+    "index.cjs"
   ],
   "repository": {
     "type": "git",
