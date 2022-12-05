@@ -1,7 +1,6 @@
 {
   "env": {
     "browser": true,
-    "commonjs": true,
     "node": true
   },
   "extends": ["standard-with-typescript", "prettier"],

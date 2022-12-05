@@ -1,6 +1,6 @@
 {
   "roots": ["<rootDir>/src"],
-  "preset": "ts-jest",
+  "preset": "ts-jest/presets/default-esm",
   "clearMocks": true,
   "collectCoverage": true,
   "coverageDirectory": "coverage",
@@ -9,8 +9,8 @@
     "^.+\\.tsx?$": [
       "ts-jest",
       {
-        "teeest": 2134,
-        "tsconfig": "tsconfig.jest.json"
+        "tsconfig": "tsconfig.jest.json",
+        "useESM": true
       }
     ]
   }
