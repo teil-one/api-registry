@@ -1,4 +1,3 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, Method } from 'axios';
 import { parse } from 'rfc6570-uri-template';
 
 class Registry {
@@ -16,12 +15,13 @@ class Registry {
         throw new Error('baseURL must be defined in the first API declaration');
       }
 
-      const axiosInstance = axios.create({
-        baseURL,
+      // TODO: Add headers support
+      const apiConfig: ApiConfig = {
+        baseURL: baseURL.replace(/\/$/, ''), // Remove trailing slash
         headers
-      });
+      };
 
-      api = new Api(axiosInstance);
+      api = new Api(apiConfig);
 
       this._apis.set(name, api);
     }
@@ -31,37 +31,40 @@ class Registry {
 }
 
 class Api {
-  private readonly _axiosInstance: AxiosInstance;
-  private readonly _endpoints: Map<string, (data: any) => Promise<AxiosResponse>>;
-  private readonly _cache: Map<string, { expires: Number; response: Promise<AxiosResponse> }>;
+  private readonly _apiConfig: ApiConfig;
+  private readonly _endpoints: Map<string, (data: any) => Promise<Response>>;
+  private readonly _cache: Map<string, { expires: Number; response: Promise<Response> }>;
 
-  constructor(axiosInstance: AxiosInstance) {
-    this._axiosInstance = axiosInstance;
-    this._endpoints = new Map<string, (data: any) => Promise<AxiosResponse>>();
-    this._cache = new Map<string, { expires: Number; response: Promise<AxiosResponse> }>();
+  constructor(apiConfig: ApiConfig) {
+    this._apiConfig = apiConfig;
+    this._endpoints = new Map<string, (data: any) => Promise<Response>>();
+    this._cache = new Map<string, { expires: Number; response: Promise<Response> }>();
   }
 
   // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
   public endpoint<T extends Record<string, PrimitiveValue> | void, TResult>(
     url: string,
-    method: Method,
+    method: string,
     ttl: number
-  ): (data: T) => Promise<AxiosResponse<TResult, T>> {
+  ): (data: T) => Promise<TypedResponse<TResult>> {
+    url = url.replace(/^\//, '');
     const endpointId = `${method} ${url}`;
 
-    let request = this._endpoints.get(endpointId) as (data: T) => Promise<AxiosResponse<TResult, T>>;
+    let request = this._endpoints.get(endpointId) as (data: T) => Promise<TypedResponse<TResult>>;
 
     if (request == null) {
-      const requestConfig: AxiosRequestConfig<T> = {
-        url,
-        method,
+      const fullUrl: string = this._apiConfig.baseURL == null ? url : `${this._apiConfig.baseURL}/${url}`;
+
+      const requestConfig: RequestConfig = {
+        url: fullUrl,
+        request: new Request(fullUrl, { method }),
         ttl
       };
 
       request = (
         this.request as (
-          ...args: Parameters<(endpointConfig: AxiosRequestConfig<T>, data: T) => Promise<AxiosResponse<TResult, T>>>
-        ) => Promise<AxiosResponse<TResult, T>>
+          ...args: Parameters<(endpointConfig: RequestConfig, data: T) => Promise<TypedResponse<TResult>>>
+        ) => Promise<TypedResponse<TResult>>
       ).bind(this, requestConfig);
 
       this._endpoints.set(endpointId, request);
@@ -72,38 +75,40 @@ class Api {
 
   // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
   private async request<T extends Record<string, PrimitiveValue> | void, TResult>(
-    endpointConfig: AxiosRequestConfig<T>,
+    endpointConfig: RequestConfig,
     data: T
-  ): Promise<AxiosResponse<TResult, T>> {
-    const requestConfig: AxiosRequestConfig<T> = { ...endpointConfig };
+  ): Promise<TypedResponse<TResult>> {
+    const requestConfig: RequestConfig = { ...endpointConfig };
 
     if (data != null) {
       // TODO: Catch parsing errors when the URL has no template
-      requestConfig.url = parse(requestConfig.url as string).expand(data);
+      const url = parse(requestConfig.url).expand(data);
+      requestConfig.request = new Request(url, requestConfig.request);
     }
 
-    const requestKey = Api.getRequestKey(requestConfig);
+    const requestKey = await Api.getRequestKey(requestConfig);
 
     const cachedResponse = this._cache.get(requestKey);
     if (cachedResponse != null && cachedResponse.expires > performance.now()) {
       return await cachedResponse.response;
     }
 
-    const responsePromise = this._axiosInstance.request<TResult, AxiosResponse<TResult, T>>(requestConfig);
+    const responsePromise = fetch(requestConfig.request);
     this._cache.set(requestKey, { expires: performance.now() + (endpointConfig.ttl ?? 0), response: responsePromise });
 
     const response = await responsePromise;
     return response;
   }
 
-  private static getRequestKey(request: AxiosRequestConfig): string {
-    if (request.url == null) {
-      throw new Error('request.url is not defined');
+  private static async getRequestKey(request: RequestConfig): Promise<string> {
+    if (request.request.url == null) {
+      throw new Error('request.request.url is not defined');
     }
 
-    let key = request.url;
-    if (request.data != null) {
-      key += '|' + new URLSearchParams(request.data).toString();
+    let key = request.request.url;
+    if (request.request.bodyUsed) {
+      const requestData = await request.request.json();
+      key += '|' + new URLSearchParams(requestData as Record<string, string>).toString();
     }
 
     return key;
@@ -114,10 +119,22 @@ const ApiRegistry = new Registry();
 
 export { ApiRegistry };
 
-declare module 'axios' {
-  interface AxiosRequestConfig {
-    urlTemplateParams?: Record<string, PrimitiveValue>;
-    ttl?: number;
+class ApiConfig {
+  baseURL: string;
+  headers?: { [key: string]: string };
+}
+
+class RequestConfig {
+  url: string;
+  request: Request;
+  ttl?: number;
+}
+
+class TypedResponse<T> extends Response {
+  override async json(): Promise<T> {
+    const response = await super.json();
+
+    return response as T;
   }
 }
 

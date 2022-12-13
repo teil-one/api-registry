@@ -8,7 +8,7 @@ test('ApiRegistry', async () => {
 
   const user = await getUser({ id: 1 });
 
-  expect(user.data.data.email).toEqual('george.bluth@reqres.in');
+  expect((await user.json()).data.email).toEqual('george.bluth@reqres.in');
 });
 
 class UserData {
