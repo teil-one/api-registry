@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, Method } from 'axios';
-import { parse } from 'uri-template';
+import { parse } from 'rfc6570-uri-template';
 
 class Registry {
   private readonly _apis: Map<string, Api>;

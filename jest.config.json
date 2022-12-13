@@ -1,6 +1,5 @@
 {
   "roots": ["<rootDir>/src"],
-  "preset": "ts-jest/presets/default-esm",
   "clearMocks": true,
   "collectCoverage": true,
   "coverageDirectory": "coverage",
@@ -13,5 +12,6 @@
         "useESM": true
       }
     ]
-  }
+  },
+  "extensionsToTreatAsEsm": [".ts"]
 }
