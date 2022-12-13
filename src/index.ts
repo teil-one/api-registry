@@ -20,7 +20,6 @@ class Registry {
         baseURL,
         headers
       });
-      axiosInstance.interceptors.request.use(urlTemplateInterceptor());
 
       api = new Api(axiosInstance);
 
@@ -77,9 +76,10 @@ class Api {
     data: T
   ): Promise<AxiosResponse<TResult, T>> {
     const requestConfig: AxiosRequestConfig<T> = { ...endpointConfig };
+
     if (data != null) {
-      requestConfig.urlTemplateParams = data;
-      requestConfig.data = data;
+      // TODO: Catch parsing errors when the URL has no template
+      requestConfig.url = parse(requestConfig.url as string).expand(data);
     }
 
     const requestKey = Api.getRequestKey(requestConfig);
@@ -101,13 +101,7 @@ class Api {
       throw new Error('request.url is not defined');
     }
 
-    let url = request.url;
-    if (request.urlTemplateParams != null) {
-      const urlTemplate = parse(url);
-      url = urlTemplate.expand(request.urlTemplateParams);
-    }
-
-    let key = url;
+    let key = request.url;
     if (request.data != null) {
       key += '|' + new URLSearchParams(request.data).toString();
     }
@@ -119,22 +113,6 @@ class Api {
 const ApiRegistry = new Registry();
 
 export { ApiRegistry };
-
-const urlTemplateInterceptor =
-  () =>
-  (config: AxiosRequestConfig): AxiosRequestConfig => {
-    const { url: originalUrl, urlTemplateParams = {} } = config;
-
-    if (originalUrl != null) {
-      const url = parse(originalUrl).expand(urlTemplateParams);
-      return {
-        ...config,
-        url,
-        urlTemplateParams
-      };
-    }
-    return config;
-  };
 
 declare module 'axios' {
   interface AxiosRequestConfig {
