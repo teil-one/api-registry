@@ -41,7 +41,7 @@ class Api {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-  public jsonEndpoint<TResult, T extends Record<string, PrimitiveValue> | void = void>(
+  public jsonEndpoint<TResult, T extends { [K in keyof T]: PrimitiveValue } | void = void>(
     url: string,
     method: string = 'GET',
     ttl: number = 0
@@ -69,7 +69,7 @@ class Api {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-  public endpoint<TResult, T extends Record<string, PrimitiveValue> | void = void>(
+  public endpoint<TResult, T extends { [K in keyof T]: PrimitiveValue } | void = void>(
     url: string,
     method: string = 'GET',
     ttl: number = 0
@@ -109,7 +109,7 @@ class Api {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-  private async request<TResult, T extends Record<string, PrimitiveValue> | void>(
+  private async request<TResult, T extends { [K in keyof T]: PrimitiveValue } | void>(
     endpointConfig: RequestConfig,
     data?: T,
     options?: RequestInit | (() => RequestInit)
