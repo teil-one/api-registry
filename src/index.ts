@@ -41,6 +41,34 @@ class Api {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
+  public jsonEndpoint<TResult, T extends Record<string, PrimitiveValue> | void = void>(
+    url: string,
+    method: string = 'GET',
+    ttl: number = 0
+  ): (data?: T, options?: RequestInit | (() => RequestInit)) => Promise<TResult> {
+    const endpoint = this.endpoint<TResult, T>(url, method, ttl);
+
+    const result: (data?: T, options?: RequestInit | (() => RequestInit)) => Promise<TResult> = async (
+      data?: T,
+      options?: RequestInit | (() => RequestInit)
+    ) => {
+      const response = await endpoint(data, options);
+      if (!response.ok) {
+        throw new JsonResponseError(response, 'request failed');
+      }
+
+      try {
+        const json = await response.json();
+        return json;
+      } catch (e: unknown) {
+        throw new JsonResponseError(response, 'response read failed', e as Error);
+      }
+    };
+
+    return result;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
   public endpoint<TResult, T extends Record<string, PrimitiveValue> | void = void>(
     url: string,
     method: string = 'GET',
@@ -154,3 +182,15 @@ class TypedResponse<T> extends Response {
 }
 
 type PrimitiveValue = string | number | boolean | null;
+
+export class JsonResponseError extends Error {
+  public readonly response: Response;
+  public readonly cause?: Error;
+
+  constructor(response: Response, message?: string, cause?: Error) {
+    super(message);
+
+    this.response = response;
+    this.cause = cause;
+  }
+}
