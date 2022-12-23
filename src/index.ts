@@ -7,7 +7,7 @@ class Registry {
     this._apis = new Map<string, Api>();
   }
 
-  public api(name: string, baseURL?: string, headers?: { [key: string]: string }): Api {
+  public api(name: string, baseURL?: string, options?: RequestInit | (() => RequestInit)): Api {
     let api = this._apis.get(name);
 
     if (api == null) {
@@ -15,10 +15,9 @@ class Registry {
         throw new Error('baseURL must be defined in the first API declaration');
       }
 
-      // TODO: Add headers support
       const apiConfig: ApiConfig = {
         baseURL: baseURL.replace(/\/$/, ''), // Remove trailing slash
-        headers
+        options: options ?? {}
       };
 
       api = new Api(apiConfig);
@@ -42,28 +41,36 @@ class Api {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-  public endpoint<T extends Record<string, PrimitiveValue> | void, TResult>(
+  public endpoint<TResult, T extends Record<string, PrimitiveValue> | void = void>(
     url: string,
-    method: string,
-    ttl: number
-  ): (data: T) => Promise<TypedResponse<TResult>> {
+    method: string = 'GET',
+    ttl: number = 0
+  ): (data?: T, options?: RequestInit | (() => RequestInit)) => Promise<TypedResponse<TResult>> {
     url = url.replace(/^\//, '');
     const endpointId = `${method} ${url}`;
 
-    let request = this._endpoints.get(endpointId) as (data: T) => Promise<TypedResponse<TResult>>;
+    let request = this._endpoints.get(endpointId) as (data?: T) => Promise<TypedResponse<TResult>>;
 
     if (request == null) {
+      const apiRequestOptions =
+        this._apiConfig.options instanceof Function ? this._apiConfig.options() : this._apiConfig.options;
       const fullUrl: string = this._apiConfig.baseURL == null ? url : `${this._apiConfig.baseURL}/${url}`;
 
       const requestConfig: RequestConfig = {
         url: fullUrl,
-        request: new Request(fullUrl, { method }),
+        request: new Request(fullUrl, { ...apiRequestOptions, method }),
         ttl
       };
 
       request = (
         this.request as (
-          ...args: Parameters<(endpointConfig: RequestConfig, data: T) => Promise<TypedResponse<TResult>>>
+          ...args: Parameters<
+            (
+              endpointConfig: RequestConfig,
+              data?: T,
+              options?: RequestInit | (() => RequestInit)
+            ) => Promise<TypedResponse<TResult>>
+          >
         ) => Promise<TypedResponse<TResult>>
       ).bind(this, requestConfig);
 
@@ -74,16 +81,18 @@ class Api {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
-  private async request<T extends Record<string, PrimitiveValue> | void, TResult>(
+  private async request<TResult, T extends Record<string, PrimitiveValue> | void>(
     endpointConfig: RequestConfig,
-    data: T
+    data?: T,
+    options?: RequestInit | (() => RequestInit)
   ): Promise<TypedResponse<TResult>> {
     const requestConfig: RequestConfig = { ...endpointConfig };
 
     if (data != null) {
-      // TODO: Catch parsing errors when the URL has no template
-      const url = parse(requestConfig.url).expand(data);
-      requestConfig.request = new Request(url, requestConfig.request);
+      try {
+        const url = parse(requestConfig.url).expand(data);
+        requestConfig.request = new Request(url, requestConfig.request);
+      } catch {}
     }
 
     const requestKey = await Api.getRequestKey(requestConfig);
@@ -93,7 +102,13 @@ class Api {
       return await cachedResponse.response;
     }
 
-    const responsePromise = fetch(requestConfig.request);
+    let request = requestConfig.request;
+    if (options != null) {
+      const requestOptions = options instanceof Function ? options() : options;
+      request = new Request(requestConfig.request, requestOptions);
+    }
+
+    const responsePromise = fetch(request);
     this._cache.set(requestKey, { expires: performance.now() + (endpointConfig.ttl ?? 0), response: responsePromise });
 
     const response = await responsePromise;
@@ -121,7 +136,7 @@ export { ApiRegistry };
 
 class ApiConfig {
   baseURL: string;
-  headers?: { [key: string]: string };
+  options: RequestInit | (() => RequestInit);
 }
 
 class RequestConfig {

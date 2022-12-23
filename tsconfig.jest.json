@@ -6,6 +6,8 @@
     "sourceMap": true,
 
     // Remove TS151001 warning from ts-jest
-    "esModuleInterop": true
+    "esModuleInterop": true,
+
+    "moduleResolution": "Node16"
   }
 }

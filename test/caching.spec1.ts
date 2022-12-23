@@ -1,4 +1,5 @@
-import { ApiRegistry } from './index';
+import { ApiRegistry } from '../src/index';
+import { UserData } from './User';
 
 test('ApiRegistry', async () => {
   const restApi = ApiRegistry.api('rest-api', 'https://reqres.in/api');
@@ -10,12 +11,3 @@ test('ApiRegistry', async () => {
 
   expect((await user.json()).data.email).toEqual('george.bluth@reqres.in');
 });
-
-class UserData {
-  data: User;
-}
-
-class User {
-  id: number;
-  email: string;
-}
