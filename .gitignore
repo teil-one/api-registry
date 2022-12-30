@@ -1,5 +1,6 @@
 node_modules
 coverage
+build
 lib
 index.js
 index.cjs
