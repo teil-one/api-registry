@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals';
-import { ApiRegistry } from '../src/index';
+import { JsonApiRegistry } from '../src/index';
 
 const fetch = jest.fn(async () => await Promise.resolve(new Response()));
 global.fetch = fetch;
@@ -38,11 +38,11 @@ const requestOptions: RequestInit = {
 };
 
 describe('Simple API request options', () => {
-  const restApi = ApiRegistry.api('rest-api-simple-options', 'http://foo.bar/api', apiRequestOptions);
+  const restApi = JsonApiRegistry.api('rest-api-simple-options', 'http://foo.bar/api', apiRequestOptions);
 
   describe('Endpoint is called with POST', () => {
     beforeEach(async () => {
-      const apiCall = restApi.endpoint<boolean>('/call', 'post');
+      const apiCall = restApi.endpoint('/call', 'post').returns<boolean>().build();
       await apiCall();
     });
 
@@ -53,7 +53,7 @@ describe('Simple API request options', () => {
 
   describe('Endpoint is called with default method', () => {
     beforeEach(async () => {
-      const apiCall = restApi.endpoint<boolean>('/call');
+      const apiCall = restApi.endpoint('/call').returns<boolean>().build();
       await apiCall();
     });
 
@@ -64,11 +64,15 @@ describe('Simple API request options', () => {
 });
 
 describe('API request options factory', () => {
-  const restApi = ApiRegistry.api('rest-api-options-factory', 'http://foo.bar/api', () => apiRequestOptions);
+  const restApi = JsonApiRegistry.api(
+    'rest-api-options-factory',
+    'http://foo.bar/api',
+    async () => await Promise.resolve(apiRequestOptions)
+  );
 
   describe('Endpoint is called with GET', () => {
     beforeEach(async () => {
-      const apiCall = restApi.endpoint<boolean>('/call', 'get');
+      const apiCall = restApi.endpoint('/call', 'get').returns<boolean>().build();
       await apiCall();
     });
 
@@ -83,11 +87,11 @@ describe('API request options factory', () => {
 });
 
 describe('No API request options', () => {
-  const restApi = ApiRegistry.api('rest-api-no-options', 'http://foo.bar/api');
+  const restApi = JsonApiRegistry.api('rest-api-no-options', 'http://foo.bar/api');
 
   describe('Endpoint is called with DELETE', () => {
     beforeEach(async () => {
-      const apiCall = restApi.endpoint<boolean>('/call', 'delete');
+      const apiCall = restApi.endpoint('/call', 'delete').returns<boolean>().build();
       await apiCall();
     });
 
@@ -98,7 +102,7 @@ describe('No API request options', () => {
 
   describe('Endpoint is called with custom options', () => {
     beforeEach(async () => {
-      const getUser = restApi.endpoint<boolean, { id: number }>('/users/{id}');
+      const getUser = restApi.endpoint('/users/{id}').receives<{ id: number }>().returns<boolean>().build();
 
       await getUser({ id: 1 }, requestOptions);
     });
@@ -110,9 +114,9 @@ describe('No API request options', () => {
 
   describe('Endpoint is called with options factory', () => {
     beforeEach(async () => {
-      const getUser = restApi.endpoint<boolean, { id: number }>('users/{id}');
+      const getUser = restApi.endpoint('users/{id}').receives<{ id: number }>().returns<boolean>().build();
 
-      await getUser({ id: 1 }, () => requestOptions);
+      await getUser({ id: 1 }, async () => await Promise.resolve(requestOptions));
     });
 
     test('Fetch is called with the same request options', () => {
@@ -120,6 +124,10 @@ describe('No API request options', () => {
     });
   });
 });
+
+// TODO: Check wrong request method
+// TODO: Check body with methods that don't support it
+// TODO: Add tests for endpoints with various combinations of data and options params
 
 function validateFetchRequest(url: string, requestOptions: RequestInit, method?: string): void {
   const expectedRequest = new Request(url, requestOptions);

@@ -35,10 +35,28 @@ describe('User API', () => {
     expect(withErrors).toEqual(true);
   });
 
+  // TODO: Add more tests for endpoints with various combinations of data and options params
+
   test('Throw read error if no data', async () => {
     let withErrors = false;
     try {
-      await api.getUsers(undefined, { method: 'delete' });
+      await api.getUsers({ method: 'delete' });
+    } catch (e: unknown) {
+      withErrors = true;
+      expect(e).toBeInstanceOf(JsonResponseError);
+
+      const error = e as JsonResponseError;
+      expect(error.message).toEqual('response read failed');
+      expect(error.cause).toMatchObject(expect.objectContaining({ message: 'Unexpected end of JSON input' }));
+    }
+
+    expect(withErrors).toEqual(true);
+  });
+
+  test('Throw read error if data with delete', async () => {
+    let withErrors = false;
+    try {
+      await api.getUser({ id: 1 }, { method: 'delete' });
     } catch (e: unknown) {
       withErrors = true;
       expect(e).toBeInstanceOf(JsonResponseError);

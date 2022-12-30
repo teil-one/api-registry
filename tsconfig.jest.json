@@ -2,12 +2,12 @@
   "extends": "./tsconfig.json",
 
   "compilerOptions": {
+    "module": "node16",
+
     // Fix code coverage in Jest
     "sourceMap": true,
 
     // Remove TS151001 warning from ts-jest
-    "esModuleInterop": true,
-
-    "moduleResolution": "Node16"
+    "esModuleInterop": true
   }
 }

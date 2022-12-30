@@ -1,13 +1,14 @@
 {
   "compilerOptions": {
-    "target": "ES2015",
-    "module": "node16",
+    "target": "ES2020",
+    "module": "ES2020",
     "sourceMap": false,
     "declaration": true,
     "outDir": "./lib/mjs",
     "strict": true,
     "strictPropertyInitialization": false,
-    "removeComments": true
+    "removeComments": true,
+    "moduleResolution": "node"
   },
   "include": ["src"],
   "exclude": ["node_modules", "**/*.spec.ts"]
