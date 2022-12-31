@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "ES2020",
+    "target": "ES2016",
+    "module": "ES2015",
     "sourceMap": false,
     "declaration": true,
     "outDir": "./build",
