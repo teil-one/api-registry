@@ -9,6 +9,11 @@ export class JsonApiRegistry {
   }
 
   public api(name: string, baseURL?: string, options?: RequestOptions): JsonApi {
+    if (baseURL != null) {
+      baseURL = baseURL.replace(/\/$/, ''); // Remove trailing slash;
+      baseURL = baseURL.toLowerCase();
+    }
+
     let api = this._apis.get(name);
 
     if (api == null) {
@@ -16,12 +21,15 @@ export class JsonApiRegistry {
         throw new Error('baseURL must be defined in the first API declaration');
       }
 
-      baseURL = baseURL.replace(/\/$/, ''); // Remove trailing slash;
       options = options ?? {};
 
       api = new JsonApi(baseURL, options);
 
       this._apis.set(name, api);
+    } else {
+      if (baseURL != null && api.baseURL !== baseURL) {
+        throw new Error(`API ${name} is already registered with another URL ${api.baseURL}`);
+      }
     }
 
     return api;

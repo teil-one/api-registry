@@ -1,5 +1,6 @@
 import { JsonEndpoint } from './JsonEndpoint';
 import { RequestOptions } from './RequestOptions';
+import { parse } from 'rfc6570-uri-template';
 
 export class JsonApi {
   private readonly _baseURL: string;
@@ -12,16 +13,20 @@ export class JsonApi {
     this._endpoints = new Map<string, JsonEndpoint>();
   }
 
-  public endpoint(url: string, method: string = 'GET', scope?: string): JsonEndpoint {
-    url = url.replace(/^\//, '');
-    // TODO: replace all template variables in the URL with the same name to match same urls with different var names
-    const endpointKey = scope == null ? `${method} ${url}` : `${method} ${url} ${scope}`;
+  public get baseURL(): string {
+    return this._baseURL;
+  }
+
+  public endpoint(url: string, method: string = 'GET'): JsonEndpoint {
+    url = url.replace(/^\//, ''); // Remove leading slash
+    url = url.replace(/\/$/, ''); // Remove trailing slash;
+    const fullUrl: string = `${this._baseURL}/${url}`;
+
+    const endpointKey = getEndpointKey(fullUrl, method);
 
     let endpoint = this._endpoints.get(endpointKey);
 
     if (endpoint == null) {
-      const fullUrl: string = this._baseURL == null ? url : `${this._baseURL}/${url}`;
-
       endpoint = new JsonEndpoint(fullUrl);
       endpoint.withOptions({ method });
       if (this._options != null) {
@@ -32,5 +37,48 @@ export class JsonApi {
     }
 
     return endpoint;
+  }
+}
+
+function getEndpointKey(url: string, method: string): string {
+  let expandedUrl: string;
+  try {
+    const template = parse(url);
+    const variables = {};
+    getTemplateVariables(template, variables);
+
+    expandedUrl = template.expand(variables);
+  } catch {
+    expandedUrl = url;
+  }
+
+  return `${method.toLowerCase()} ${expandedUrl}`;
+}
+
+function getTemplateVariables(template: unknown, variables: Record<string, unknown>): void {
+  if (template == null) {
+    return;
+  }
+
+  if (Array.isArray(template)) {
+    for (const item of template) {
+      getTemplateVariables(item, variables);
+    }
+  } else if (typeof template === 'object') {
+    Object.keys(template).forEach((key) => {
+      if (key === 'variables') {
+        const variableList = (template as any)[key];
+        for (const item of variableList) {
+          if (item.name != null) {
+            if (variables[item.name] == null) {
+              variables[item.name] = Object.keys(variables).length;
+            }
+          }
+        }
+      } else {
+        const value = (template as any)[key];
+        getTemplateVariables(value, variables);
+      }
+    });
   }
 }
