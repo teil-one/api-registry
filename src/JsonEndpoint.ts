@@ -31,7 +31,7 @@ class JsonEndpointBase {
   protected async send(data?: Record<string, unknown>, init?: RequestOptions): Promise<Response> {
     let request: Request | null = null;
 
-    const endpointOptions = await this.reduceOptions();
+    const endpointOptions = await this.reduceOptions(init);
 
     if (data == null) {
       request = new Request(this._url, endpointOptions);
@@ -51,11 +51,6 @@ class JsonEndpointBase {
 
     if (request == null) {
       throw new Error('Request build failed');
-    }
-
-    if (init != null) {
-      const requestOptions = init instanceof Function ? await init() : init;
-      request = new Request(request, requestOptions);
     }
 
     const requestKey = await getRequestKey(request);
@@ -86,8 +81,10 @@ class JsonEndpointBase {
     }
   }
 
-  private async reduceOptions(): Promise<RequestInit> {
-    const optionsPromises = this._options.map(async (item) =>
+  private async reduceOptions(requestOptions?: RequestOptions): Promise<RequestInit> {
+    const combinedOptions = requestOptions == null ? this._options : [...this._options, requestOptions];
+
+    const optionsPromises = combinedOptions.map(async (item) =>
       item instanceof Function ? await item() : await Promise.resolve(item)
     );
     const allOptions = await Promise.all(optionsPromises);
@@ -95,7 +92,7 @@ class JsonEndpointBase {
     let result: RequestInit = {};
 
     for (const options of allOptions) {
-      result = { ...result, ...options };
+      result = { ...result, ...options, headers: { ...result.headers, ...options.headers } };
     }
 
     return result;

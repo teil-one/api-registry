@@ -35,9 +35,24 @@ describe('User API', () => {
     expect(withErrors).toEqual(true);
   });
 
-  // TODO: Add more tests for endpoints with various combinations of data and options params
+  test('Throw 400 error if wrong method', async () => {
+    let withErrors = false;
+    try {
+      await api.getUser({ id: 1 }, { method: 'wrong-method' });
+    } catch (e: unknown) {
+      withErrors = true;
+      expect(e).toBeInstanceOf(JsonResponseError);
 
-  test('Throw read error if no data', async () => {
+      const error = e as JsonResponseError;
+      expect(error.message).toEqual('request failed');
+      expect(error.response.status).toEqual(400);
+      expect(error.response.statusText).toEqual('Bad Request');
+    }
+
+    expect(withErrors).toEqual(true);
+  });
+
+  test('Throw read error if no data in response', async () => {
     let withErrors = false;
     try {
       await api.getUsers({ method: 'delete' });

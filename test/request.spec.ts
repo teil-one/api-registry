@@ -46,8 +46,8 @@ describe('Simple API request options', () => {
       await apiCall();
     });
 
-    test('Fetch is called with the same request options', () => {
-      validateFetchRequest('http://foo.bar/api/call', apiRequestOptions, 'POST');
+    test('Fetch is called with the same request options', async () => {
+      await validateFetchRequest('http://foo.bar/api/call', apiRequestOptions, 'POST');
     });
   });
 
@@ -59,6 +59,69 @@ describe('Simple API request options', () => {
 
     test('Fetch is called with GET', () => {
       expect(fetch).toHaveBeenNthCalledWith(1, expect.objectContaining({ method: 'GET' }));
+    });
+  });
+
+  describe('Endpoint is called with custom options', () => {
+    const localRequestOptions: RequestInit = { keepalive: false, method: 'POST' };
+
+    beforeEach(async () => {
+      const apiCall = restApi.endpoint('/call').returns<boolean>().build();
+      await apiCall(localRequestOptions);
+    });
+
+    test('Fetch is called with merged api and request options', async () => {
+      await validateFetchRequest('http://foo.bar/api/call', { ...apiRequestOptions, ...localRequestOptions });
+    });
+  });
+
+  describe('Endpoint is called with custom options factory', () => {
+    const localRequestOptions: RequestInit = { keepalive: false, method: 'POST' };
+
+    beforeEach(async () => {
+      const apiCall = restApi.endpoint('/call').returns<boolean>().build();
+      await apiCall(async () => await Promise.resolve(localRequestOptions));
+    });
+
+    test('Fetch is called with merged api and request options', async () => {
+      await validateFetchRequest('http://foo.bar/api/call', { ...apiRequestOptions, ...localRequestOptions });
+    });
+  });
+
+  describe('Endpoint is called with custom headers', () => {
+    const localRequestOptions: RequestInit = {
+      headers: { Authorization: 'Basic Zm9vOmJhcg==', 'Accept-Language': '*' }
+    };
+
+    beforeEach(async () => {
+      const apiCall = restApi.endpoint('/call').returns<boolean>().build();
+      await apiCall(localRequestOptions);
+    });
+
+    test('Fetch is called with merged headers from api and request options', async () => {
+      await validateFetchRequest('http://foo.bar/api/call', {
+        ...apiRequestOptions,
+        ...localRequestOptions,
+        headers: { ...apiRequestOptions.headers, ...localRequestOptions.headers }
+      });
+    });
+  });
+
+  describe('Endpoint is called with data and custom options', () => {
+    const localRequestOptions: RequestInit = { keepalive: false, method: 'POST' };
+
+    beforeEach(async () => {
+      const getUser = restApi.endpoint('/users/{id}').receives<{ id: number }>().returns<boolean>().build();
+      await getUser({ id: 1 }, localRequestOptions);
+    });
+
+    test('Fetch is called with merged api options, request options, and data', async () => {
+      await validateFetchRequest(
+        'http://foo.bar/api/users/1',
+        { ...apiRequestOptions, ...localRequestOptions },
+        'POST',
+        { id: 1 }
+      );
     });
   });
 });
@@ -76,8 +139,8 @@ describe('API request options factory', () => {
       await apiCall();
     });
 
-    test('Fetch is called with the same request options', () => {
-      validateFetchRequest('http://foo.bar/api/call', apiRequestOptions);
+    test('Fetch is called with the same request options', async () => {
+      await validateFetchRequest('http://foo.bar/api/call', apiRequestOptions);
     });
 
     test('Fetch is called with GET', () => {
@@ -98,6 +161,10 @@ describe('No API request options', () => {
     test('Fetch is called with DELETE', () => {
       expect(fetch).toHaveBeenNthCalledWith(1, expect.objectContaining({ method: 'DELETE' }));
     });
+
+    test('Fetch is called without headers', async () => {
+      await validateFetchRequest('http://foo.bar/api/call', { method: 'DELETE', headers: undefined });
+    });
   });
 
   describe('Endpoint is called with custom options', () => {
@@ -107,8 +174,44 @@ describe('No API request options', () => {
       await getUser({ id: 1 }, requestOptions);
     });
 
-    test('Fetch is called with the same request options', () => {
-      validateFetchRequest('http://foo.bar/api/users/1', requestOptions);
+    test('Fetch is called with the same request options', async () => {
+      await validateFetchRequest('http://foo.bar/api/users/1', requestOptions, requestOptions.method, { id: 1 });
+    });
+  });
+
+  describe('Endpoint is called with GET and data', () => {
+    beforeEach(async () => {
+      const getUser = restApi.endpoint('/users/{id}', 'get').receives<{ id: number }>().returns<boolean>().build();
+
+      await getUser({ id: 1 });
+    });
+
+    test('Fetch is called without body', async () => {
+      await validateFetchRequest('http://foo.bar/api/users/1', { method: 'GET' }, 'GET', undefined);
+    });
+  });
+
+  describe('Endpoint is called with HEAD and data', () => {
+    beforeEach(async () => {
+      const getUser = restApi.endpoint('/users/{id}', 'head').receives<{ id: number }>().returns<boolean>().build();
+
+      await getUser({ id: 1 });
+    });
+
+    test('Fetch is called without body', async () => {
+      await validateFetchRequest('http://foo.bar/api/users/1', { method: 'HEAD' }, 'HEAD', undefined);
+    });
+  });
+
+  describe('Endpoint is called with POST and data', () => {
+    beforeEach(async () => {
+      const getUser = restApi.endpoint('/users/{id}', 'post').receives<{ id: number }>().returns<boolean>().build();
+
+      await getUser({ id: 1 });
+    });
+
+    test('Fetch is called with body', async () => {
+      await validateFetchRequest('http://foo.bar/api/users/1', { method: 'POST' }, 'POST', { id: 1 });
     });
   });
 
@@ -119,17 +222,18 @@ describe('No API request options', () => {
       await getUser({ id: 1 }, async () => await Promise.resolve(requestOptions));
     });
 
-    test('Fetch is called with the same request options', () => {
-      validateFetchRequest('http://foo.bar/api/users/1', requestOptions);
+    test('Fetch is called with the same request options', async () => {
+      await validateFetchRequest('http://foo.bar/api/users/1', requestOptions, requestOptions.method, { id: 1 });
     });
   });
 });
 
-// TODO: Check wrong request method
-// TODO: Check body with methods that don't support it
-// TODO: Add tests for endpoints with various combinations of data and options params
-
-function validateFetchRequest(url: string, requestOptions: RequestInit, method?: string): void {
+async function validateFetchRequest(
+  url: string,
+  requestOptions: RequestInit,
+  method?: string,
+  body?: Record<string, unknown>
+): Promise<void> {
   const expectedRequest = new Request(url, requestOptions);
 
   const calls = fetch.mock.calls;
@@ -150,7 +254,17 @@ function validateFetchRequest(url: string, requestOptions: RequestInit, method?:
   expect(fetchRequest.integrity).toEqual(expectedRequest.integrity);
   expect(fetchRequest.method).toEqual(method ?? expectedRequest.method);
 
-  for (const [key, value] of expectedRequest.headers) {
-    expect(fetchRequest.headers.get(key)).toEqual(value);
+  if (body != null) {
+    expect(await fetchRequest.json()).toEqual(body);
+  } else {
+    expect(fetchRequest.body).toBeFalsy();
+  }
+
+  if (expectedRequest.headers != null && expectedRequest.headers.keys.length > 0) {
+    for (const [key, value] of expectedRequest.headers) {
+      expect(fetchRequest.headers.get(key)).toEqual(value);
+    }
+  } else {
+    expect(fetchRequest.headers.keys.length).toEqual(0);
   }
 }
