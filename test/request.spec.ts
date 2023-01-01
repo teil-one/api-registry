@@ -1,5 +1,6 @@
 import { jest } from '@jest/globals';
 import { JsonApiRegistry } from '../src/index';
+import { validateFetchRequest } from './validateFetchRequest';
 
 const fetch = jest.fn(async () => await Promise.resolve(new Response()));
 global.fetch = fetch;
@@ -47,7 +48,7 @@ describe('Simple API request options', () => {
     });
 
     test('Fetch is called with the same request options', async () => {
-      await validateFetchRequest('http://foo.bar/api/call', apiRequestOptions, 'POST');
+      await validateFetchRequest(fetch, 'http://foo.bar/api/call', apiRequestOptions, 'POST');
     });
   });
 
@@ -71,7 +72,7 @@ describe('Simple API request options', () => {
     });
 
     test('Fetch is called with merged api and request options', async () => {
-      await validateFetchRequest('http://foo.bar/api/call', { ...apiRequestOptions, ...localRequestOptions });
+      await validateFetchRequest(fetch, 'http://foo.bar/api/call', { ...apiRequestOptions, ...localRequestOptions });
     });
   });
 
@@ -84,7 +85,7 @@ describe('Simple API request options', () => {
     });
 
     test('Fetch is called with merged api and request options', async () => {
-      await validateFetchRequest('http://foo.bar/api/call', { ...apiRequestOptions, ...localRequestOptions });
+      await validateFetchRequest(fetch, 'http://foo.bar/api/call', { ...apiRequestOptions, ...localRequestOptions });
     });
   });
 
@@ -99,7 +100,7 @@ describe('Simple API request options', () => {
     });
 
     test('Fetch is called with merged headers from api and request options', async () => {
-      await validateFetchRequest('http://foo.bar/api/call', {
+      await validateFetchRequest(fetch, 'http://foo.bar/api/call', {
         ...apiRequestOptions,
         ...localRequestOptions,
         headers: { ...apiRequestOptions.headers, ...localRequestOptions.headers }
@@ -117,6 +118,7 @@ describe('Simple API request options', () => {
 
     test('Fetch is called with merged api options, request options, and data', async () => {
       await validateFetchRequest(
+        fetch,
         'http://foo.bar/api/users/1',
         { ...apiRequestOptions, ...localRequestOptions },
         'POST',
@@ -140,7 +142,7 @@ describe('API request options factory', () => {
     });
 
     test('Fetch is called with the same request options', async () => {
-      await validateFetchRequest('http://foo.bar/api/call', apiRequestOptions);
+      await validateFetchRequest(fetch, 'http://foo.bar/api/call', apiRequestOptions);
     });
 
     test('Fetch is called with GET', () => {
@@ -163,7 +165,7 @@ describe('No API request options', () => {
     });
 
     test('Fetch is called without headers', async () => {
-      await validateFetchRequest('http://foo.bar/api/call', { method: 'DELETE', headers: undefined });
+      await validateFetchRequest(fetch, 'http://foo.bar/api/call', { method: 'DELETE', headers: undefined });
     });
   });
 
@@ -175,7 +177,7 @@ describe('No API request options', () => {
     });
 
     test('Fetch is called with the same request options', async () => {
-      await validateFetchRequest('http://foo.bar/api/users/1', requestOptions, requestOptions.method, { id: 1 });
+      await validateFetchRequest(fetch, 'http://foo.bar/api/users/1', requestOptions, requestOptions.method, { id: 1 });
     });
   });
 
@@ -187,7 +189,7 @@ describe('No API request options', () => {
     });
 
     test('Fetch is called without body', async () => {
-      await validateFetchRequest('http://foo.bar/api/users/1', { method: 'GET' }, 'GET', undefined);
+      await validateFetchRequest(fetch, 'http://foo.bar/api/users/1', { method: 'GET' }, 'GET', undefined);
     });
   });
 
@@ -199,7 +201,7 @@ describe('No API request options', () => {
     });
 
     test('Fetch is called without body', async () => {
-      await validateFetchRequest('http://foo.bar/api/users/1', { method: 'HEAD' }, 'HEAD', undefined);
+      await validateFetchRequest(fetch, 'http://foo.bar/api/users/1', { method: 'HEAD' }, 'HEAD', undefined);
     });
   });
 
@@ -210,8 +212,14 @@ describe('No API request options', () => {
       await getUser({ id: 1 });
     });
 
-    test('Fetch is called with body', async () => {
-      await validateFetchRequest('http://foo.bar/api/users/1', { method: 'POST' }, 'POST', { id: 1 });
+    test('Fetch is called with body and default headers', async () => {
+      await validateFetchRequest(
+        fetch,
+        'http://foo.bar/api/users/1',
+        { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' } },
+        'POST',
+        { id: 1 }
+      );
     });
   });
 
@@ -223,48 +231,7 @@ describe('No API request options', () => {
     });
 
     test('Fetch is called with the same request options', async () => {
-      await validateFetchRequest('http://foo.bar/api/users/1', requestOptions, requestOptions.method, { id: 1 });
+      await validateFetchRequest(fetch, 'http://foo.bar/api/users/1', requestOptions, requestOptions.method, { id: 1 });
     });
   });
 });
-
-async function validateFetchRequest(
-  url: string,
-  requestOptions: RequestInit,
-  method?: string,
-  body?: Record<string, unknown>
-): Promise<void> {
-  const expectedRequest = new Request(url, requestOptions);
-
-  const calls = fetch.mock.calls;
-  expect(calls).toHaveLength(1);
-  expect(calls[0]).toHaveLength(1);
-
-  const fetchRequest = (calls[0] as Request[])[0];
-
-  expect(fetchRequest.url).toEqual(expectedRequest.url);
-  expect(fetchRequest.cache).toEqual(expectedRequest.cache);
-  expect(fetchRequest.credentials).toEqual(expectedRequest.credentials);
-  expect(fetchRequest.keepalive).toEqual(expectedRequest.keepalive);
-  expect(fetchRequest.mode).toEqual(expectedRequest.mode);
-  expect(fetchRequest.redirect).toEqual(expectedRequest.redirect);
-  expect(fetchRequest.referrer).toEqual(expectedRequest.referrer);
-  expect(fetchRequest.referrerPolicy).toEqual(expectedRequest.referrerPolicy);
-  expect(fetchRequest.signal).toEqual(expectedRequest.signal);
-  expect(fetchRequest.integrity).toEqual(expectedRequest.integrity);
-  expect(fetchRequest.method).toEqual(method ?? expectedRequest.method);
-
-  if (body != null) {
-    expect(await fetchRequest.json()).toEqual(body);
-  } else {
-    expect(fetchRequest.body).toBeFalsy();
-  }
-
-  if (expectedRequest.headers != null && expectedRequest.headers.keys.length > 0) {
-    for (const [key, value] of expectedRequest.headers) {
-      expect(fetchRequest.headers.get(key)).toEqual(value);
-    }
-  } else {
-    expect(fetchRequest.headers.keys.length).toEqual(0);
-  }
-}

@@ -49,10 +49,6 @@ class JsonEndpointBase {
       }
     }
 
-    if (request == null) {
-      throw new Error('Request build failed');
-    }
-
     const requestKey = await getRequestKey(request, data);
     const cachedResponse = this._cache.get(requestKey);
     if (cachedResponse != null && cachedResponse.expires >= performance.now()) {
@@ -156,10 +152,6 @@ class JsonEndpointWithData<TResult, T extends SimpleObject<T>> extends JsonEndpo
 }
 
 async function getRequestKey(request: Request, data?: Record<string, unknown>): Promise<string> {
-  if (request.url == null) {
-    throw new Error('request.url is not defined');
-  }
-
   let key = request.url;
 
   key += '|' + request.method;

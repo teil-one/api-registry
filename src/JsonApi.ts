@@ -28,7 +28,12 @@ export class JsonApi {
 
     if (endpoint == null) {
       endpoint = new JsonEndpoint(fullUrl);
-      endpoint.withOptions({ method });
+
+      if (method.toLowerCase() !== 'get') {
+        // Don't add the default GET method
+        endpoint.withOptions({ method });
+      }
+
       if (this._options != null) {
         endpoint.withOptions(this._options);
       }
