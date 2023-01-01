@@ -1,7 +1,5 @@
-import { JsonApiRegistry } from '../src/index';
+import { JsonApiRegistry, JsonApi, RequestOptions } from '../src';
 import { jest } from '@jest/globals';
-import { JsonApi } from '../src/JsonApi';
-import { RequestOptions } from '../src/RequestOptions';
 import { validateFetchRequest } from './validateFetchRequest';
 
 const fetch = jest.fn(async () => await Promise.resolve(new Response()));

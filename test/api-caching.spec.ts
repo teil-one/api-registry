@@ -1,5 +1,4 @@
-import { JsonApiRegistry } from '../src/index';
-import { JsonApi } from '../src/JsonApi';
+import { JsonApiRegistry, JsonApi } from '../src';
 
 describe('No API registered', () => {
   describe('Register API without URL', () => {

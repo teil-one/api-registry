@@ -8,7 +8,7 @@
     "strict": true,
     "strictPropertyInitialization": false,
     "removeComments": true,
-    "moduleResolution": "node"
+    "moduleResolution": "Node"
   },
   "include": ["src"],
   "exclude": ["node_modules", "**/*.spec.ts"]

@@ -1,4 +1,4 @@
-import { JsonApiRegistry } from '../src/index';
+import { JsonApiRegistry } from '../src';
 import { jest } from '@jest/globals';
 
 const fetch = jest.fn(async () => await Promise.resolve(new Response()));

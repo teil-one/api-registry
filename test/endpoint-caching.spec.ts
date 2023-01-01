@@ -1,6 +1,4 @@
-import { JsonApiRegistry } from '../src/index';
-import { JsonApi } from '../src/JsonApi';
-import { JsonEndpoint } from '../src/JsonEndpoint';
+import { JsonApiRegistry, JsonApi, JsonEndpoint } from '../src';
 
 describe('Registered API and endpoint', () => {
   let registeredApi: JsonApi;
