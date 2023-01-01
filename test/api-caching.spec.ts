@@ -1,6 +1,5 @@
 import { JsonApiRegistry } from '../src/index';
 import { JsonApi } from '../src/JsonApi';
-// import { UserData } from './User';
 
 describe('No API registered', () => {
   describe('Register API without URL', () => {
