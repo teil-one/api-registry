@@ -1,6 +1,6 @@
 {
   "name": "api-registry",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Promise based centralized HTTP API client for the browser and node.js",
   "main": "index.js",
   "types": "index.d.js",
