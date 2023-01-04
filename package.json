@@ -48,7 +48,6 @@
   "homepage": "https://github.com/teil-one/api-registry#readme",
   "devDependencies": {
     "@rollup/plugin-terser": "^0.2.1",
-    "@types/axios": "^0.14.0",
     "@types/jest": "^29.2.3",
     "@typescript-eslint/eslint-plugin": "^5.45.0",
     "@typescript-eslint/parser": "^5.45.0",
