@@ -41,11 +41,16 @@ class JsonEndpointBase {
         url = parse(this._url).expand(data);
       } catch {}
 
-      if (['get', 'head'].includes((endpointOptions.method ?? 'get').toLowerCase())) {
+      const method = (endpointOptions.method ?? 'get').toLowerCase();
+      if (['get', 'head'].includes(method)) {
         // GET and HEAD requests cannot have body
         request = new Request(url, endpointOptions);
       } else {
-        request = new Request(url, { ...endpointOptions, body: JSON.stringify(data) });
+        request = new Request(url, {
+          ...endpointOptions,
+          headers: { 'Content-Type': 'application/json', ...endpointOptions.headers },
+          body: JSON.stringify(data)
+        });
       }
     }
 

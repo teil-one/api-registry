@@ -11,7 +11,7 @@ describe('API with options', () => {
   beforeAll(() => {
     api = JsonApiRegistry.api('rest-api', 'http://foo.bar/api', {
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/vnd.api+json',
         Authorization:
           'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'
       }
@@ -47,7 +47,7 @@ describe('API with options', () => {
           'http://foo.bar/api/user/1',
           {
             headers: {
-              'Content-Type': 'application/json',
+              'Content-Type': 'application/vnd.api+json',
               Authorization: 'Basic Zm9vOmJhcg==',
               'Accept-Language': 'de-DE',
               'Accept-Encoding': 'deflate'
@@ -72,7 +72,7 @@ describe('API with options', () => {
           'http://foo.bar/api/user/1',
           {
             headers: {
-              'Content-Type': 'application/json',
+              'Content-Type': 'application/vnd.api+json',
               Authorization: 'Basic Zm9vOmJhcg==',
               'Accept-Language': '*'
             },

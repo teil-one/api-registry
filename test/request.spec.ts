@@ -6,7 +6,7 @@ const fetch = jest.fn(async () => await Promise.resolve(new Response()));
 global.fetch = fetch;
 
 const headers = {
-  'Content-Type': 'application/json',
+  'Content-Type': 'application/vnd.api+json',
   Authorization:
     'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'
 };
@@ -216,7 +216,7 @@ describe('No API request options', () => {
       await validateFetchRequest(
         fetch,
         'http://foo.bar/api/users/1',
-        { method: 'POST', headers: { 'content-type': 'text/plain;charset=UTF-8' } },
+        { method: 'POST', headers: { 'content-type': 'application/json' } },
         'POST',
         { id: 1 }
       );
