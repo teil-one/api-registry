@@ -20,7 +20,9 @@ export class JsonApi {
   public endpoint(url: string, method: string = 'GET'): JsonEndpoint {
     url = url.replace(/^\//, ''); // Remove leading slash
     url = url.replace(/\/$/, ''); // Remove trailing slash;
-    const fullUrl: string = `${this._baseURL}/${url}`;
+
+    const separator = url.startsWith('{?') ? '' : '/';
+    const fullUrl: string = `${this._baseURL}${separator}${url}`;
 
     const endpointKey = getEndpointKey(fullUrl, method);
 

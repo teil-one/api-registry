@@ -5,6 +5,14 @@
   "collectCoverage": true,
   "coverageDirectory": "coverage",
   "coverageProvider": "v8",
+  "collectCoverageFrom": ["src/**/*.ts"],
+  "coveragePathIgnorePatterns": [
+    "ApiRequestCache.ts",
+    "JsonResponse.ts",
+    "PrimitiveValue.ts",
+    "RequestOptions.ts",
+    "SimpleObject.ts"
+  ],
   "transform": {
     "^.+\\.tsx?$": [
       "ts-jest",

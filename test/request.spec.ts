@@ -1,4 +1,4 @@
-import { JsonApiRegistry } from '../src';
+import { JsonApiRegistry, JsonResponse } from '../src';
 import { jest } from '@jest/globals';
 import { validateFetchRequest } from './validateFetchRequest';
 
@@ -190,6 +190,28 @@ describe('No API request options', () => {
 
     test('Fetch is called without body', async () => {
       await validateFetchRequest(fetch, 'http://foo.bar/api/users/1', { method: 'GET' }, 'GET', undefined);
+    });
+  });
+
+  describe('Endpoint has no path and a template is in the query', () => {
+    let getUsers: (data: { limit: number; skip: number }) => Promise<JsonResponse<boolean>>;
+
+    beforeEach(async () => {
+      getUsers = restApi
+        .endpoint('{?limit,skip}')
+        .receives<{ limit: number; skip: number }>()
+        .returns<boolean>()
+        .build();
+    });
+
+    describe('Endpoint is called', () => {
+      beforeEach(async () => {
+        await getUsers({ limit: 10, skip: 0 });
+      });
+
+      test('Fetch is called with correct query parameters', async () => {
+        await validateFetchRequest(fetch, 'http://foo.bar/api?limit=10&skip=0', { method: 'GET' }, 'GET', undefined);
+      });
     });
   });
 
