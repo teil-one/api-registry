@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="EN">
+<head>
+    <meta charset="utf-8">
+    <title>Editable List | Web Components</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+    <editable-list
+        title="TODO"
+        add-item-text="Add new list item:"
+    >
+    </editable-list>
+    <script type="module">
+        import { JsonApiRegistry } from 'https://unpkg.com/api-registry/index.js?module';
+        JsonApiRegistry.api('todos-api', 'https://dummyjson.com/todos');
+    </script>
+    <script type="module" src="main.js"></script>
+</body>
+</html>

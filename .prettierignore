@@ -1,6 +1,7 @@
 build
 coverage
 lib
+examples
 index.js
 index.cjs
 index.d.ts

@@ -37,8 +37,10 @@
   "keywords": [
     "api",
     "http",
+    "fetch",
     "centralized",
-    "node"
+    "node",
+    "Fetch API"
   ],
   "author": "Sergei Koshel",
   "license": "Apache-2.0",
