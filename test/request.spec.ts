@@ -39,7 +39,7 @@ const requestOptions: RequestInit = {
 };
 
 describe('Simple API request options', () => {
-  const restApi = JsonApiRegistry.api('rest-api-simple-options', 'http://foo.bar/api', apiRequestOptions);
+  const restApi = JsonApiRegistry.api('rest-api-simple-options', 'http://foo.bar/api').withOptions(apiRequestOptions);
 
   describe('Endpoint is called with POST', () => {
     beforeEach(async () => {
@@ -129,9 +129,7 @@ describe('Simple API request options', () => {
 });
 
 describe('API request options factory', () => {
-  const restApi = JsonApiRegistry.api(
-    'rest-api-options-factory',
-    'http://foo.bar/api',
+  const restApi = JsonApiRegistry.api('rest-api-options-factory', 'http://foo.bar/api').withOptions(
     async () => await Promise.resolve(apiRequestOptions)
   );
 

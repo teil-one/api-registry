@@ -1,5 +1,4 @@
 import { JsonApi } from './JsonApi';
-import { RequestOptions } from './RequestOptions';
 
 export class JsonApiRegistry {
   private readonly _apis: Map<string, JsonApi>;
@@ -8,7 +7,7 @@ export class JsonApiRegistry {
     this._apis = new Map<string, JsonApi>();
   }
 
-  public api(name: string, baseURL?: string, options?: RequestOptions): JsonApi {
+  public api(name: string, baseURL?: string): JsonApi {
     if (baseURL != null) {
       baseURL = baseURL.replace(/\/$/, ''); // Remove trailing slash;
       baseURL = baseURL.toLowerCase();
@@ -21,9 +20,7 @@ export class JsonApiRegistry {
         throw new Error('baseURL must be defined in the first API declaration');
       }
 
-      options = options ?? {};
-
-      api = new JsonApi(baseURL, options);
+      api = new JsonApi(baseURL);
 
       this._apis.set(name, api);
     } else {

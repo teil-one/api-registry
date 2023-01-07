@@ -11,6 +11,7 @@
     "JsonResponse.ts",
     "PrimitiveValue.ts",
     "RequestOptions.ts",
+    "RequestInterceptor.ts",
     "SimpleObject.ts"
   ],
   "transform": {

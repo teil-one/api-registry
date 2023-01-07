@@ -9,7 +9,7 @@ describe('API with options', () => {
   let api: JsonApi;
 
   beforeAll(() => {
-    api = JsonApiRegistry.api('rest-api', 'http://foo.bar/api', {
+    api = JsonApiRegistry.api('rest-api', 'http://foo.bar/api').withOptions({
       headers: {
         'Content-Type': 'application/vnd.api+json',
         Authorization:
@@ -81,6 +81,40 @@ describe('API with options', () => {
           'UPDATE',
           { id: 1 }
         );
+      });
+    });
+
+    describe('Added more API options', () => {
+      beforeAll(() => {
+        JsonApiRegistry.api('rest-api').withOptions({
+          headers: { Authorization: 'Basic Sm9objpEb2U=' },
+          method: 'put',
+          referrer: 'http://foo.bar/'
+        });
+      });
+
+      describe('Request is called without options', () => {
+        beforeEach(async () => {
+          await getUser({ id: 1 });
+        });
+
+        test('API and endpoint options are combined and applied', async () => {
+          await validateFetchRequest(
+            fetch,
+            'http://foo.bar/api/user/1',
+            {
+              headers: {
+                'Content-Type': 'application/vnd.api+json',
+                Authorization: 'Basic Zm9vOmJhcg==',
+                'Accept-Language': '*'
+              },
+              method: 'UPDATE',
+              referrer: 'http://foo.bar/'
+            },
+            'UPDATE',
+            { id: 1 }
+          );
+        });
       });
     });
   });

@@ -1,15 +1,18 @@
 import { JsonEndpoint } from './JsonEndpoint';
 import { RequestOptions } from './RequestOptions';
 import { parse } from 'rfc6570-uri-template';
+import { RequestInterceptor } from './RequestInterceptor';
 
 export class JsonApi {
   private readonly _baseURL: string;
-  private readonly _options: RequestOptions;
+  private readonly _options: RequestOptions[];
+  private readonly _interceptors: RequestInterceptor[];
   private readonly _endpoints: Map<string, JsonEndpoint>;
 
-  constructor(baseURL: string, options: RequestOptions) {
+  constructor(baseURL: string) {
     this._baseURL = baseURL;
-    this._options = options;
+    this._options = [];
+    this._interceptors = [];
     this._endpoints = new Map<string, JsonEndpoint>();
   }
 
@@ -29,21 +32,29 @@ export class JsonApi {
     let endpoint = this._endpoints.get(endpointKey);
 
     if (endpoint == null) {
-      endpoint = new JsonEndpoint(fullUrl);
+      endpoint = new JsonEndpoint(fullUrl, this._options, this._interceptors);
 
       if (method.toLowerCase() !== 'get') {
         // Don't add the default GET method
         endpoint.withOptions({ method });
       }
 
-      if (this._options != null) {
-        endpoint.withOptions(this._options);
-      }
-
       this._endpoints.set(endpointKey, endpoint);
     }
 
     return endpoint;
+  }
+
+  public withOptions(apiOptions: RequestOptions): JsonApi {
+    this._options.push(apiOptions);
+
+    return this;
+  }
+
+  public intercept(interceptor: RequestInterceptor): JsonApi {
+    this._interceptors.push(interceptor);
+
+    return this;
   }
 }
 
