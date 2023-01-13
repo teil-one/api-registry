@@ -58,7 +58,9 @@ class JsonEndpointBase {
       init
     );
 
-    this._cache.set(requestKey, { expires: performance.now() + this._ttl, response: responsePromise });
+    if (this._ttl !== 0) {
+      this._cache.set(requestKey, { expires: performance.now() + this._ttl, response: responsePromise });
+    }
 
     return await responsePromise;
   }
