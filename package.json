@@ -1,7 +1,7 @@
 {
   "name": "api-registry",
   "version": "0.8.0",
-  "description": "Promise based centralized HTTP API client for the browser and node.js",
+  "description": "Centralized HTTP API client for the browser and Node.js based on Fetch API",
   "main": "index.js",
   "types": "index.d.js",
   "type": "module",
@@ -38,9 +38,12 @@
     "api",
     "http",
     "fetch",
+    "request",
+    "cache",
     "centralized",
     "node",
-    "Fetch API"
+    "Fetch API",
+    "Cache API"
   ],
   "author": "Sergei Koshel",
   "license": "Apache-2.0",

@@ -1,7 +1,7 @@
 import { JsonApiRegistry } from '../src';
 import { jest } from '@jest/globals';
 
-const fetch = jest.fn(async () => await Promise.resolve(new Response()));
+const fetch = jest.fn(async () => await Promise.resolve(new Response('{"id": 1}')));
 global.fetch = fetch;
 
 describe('Endpoint without cache', () => {
@@ -32,43 +32,82 @@ describe('Endpoint with cache', () => {
   beforeAll(() => {
     const api = JsonApiRegistry.api('rest-api', 'http://foo.bar/api');
 
-    getUserWith100MsCache = api.endpoint('users/{id}').receives<{ id: number }>().withTTL(100).build();
+    getUserWith100MsCache = api.endpoint('users/{id}').receives<{ id: number }>().withCache(100).build();
 
-    getUsersWith100MsCacheAndData = api.endpoint('users', 'post').withTTL(100).receives<{ page: number }>().build();
+    getUsersWith100MsCacheAndData = api.endpoint('users', 'post').withCache(100).receives<{ page: number }>().build();
   });
 
   describe('Endpoint is called twice simultaneously with the same data', () => {
+    let response1: Response, response2: Response;
     beforeEach(async () => {
       const call1 = getUserWith100MsCache({ id: 1 });
       const call2 = getUserWith100MsCache({ id: 1 });
-      await Promise.all([call1, call2]);
+      [response1, response2] = await Promise.all([call1, call2]);
     });
 
     test('Fetch is called once', () => {
       expect(fetch).toHaveBeenCalledTimes(1);
+    });
+
+    describe('Response body is read', () => {
+      let json1: any, json2: any;
+      beforeEach(async () => {
+        json1 = await response1.json();
+        json2 = await response2.json();
+      });
+
+      test('Body is correctly read and remains the same', () => {
+        expect(json1).toEqual(json2);
+      });
     });
   });
 
   describe('Endpoint is called twice sequentially with the same data and no delay', () => {
+    let response1: Response, response2: Response;
     beforeEach(async () => {
-      await getUserWith100MsCache({ id: 2 });
-      await getUserWith100MsCache({ id: 2 });
+      response1 = await getUserWith100MsCache({ id: 2 });
+      response2 = await getUserWith100MsCache({ id: 2 });
     });
 
     test('Fetch is called once', () => {
       expect(fetch).toHaveBeenCalledTimes(1);
+    });
+
+    describe('Response body is read', () => {
+      let json1: any, json2: any;
+      beforeEach(async () => {
+        json1 = await response1.json();
+        json2 = await response2.json();
+      });
+
+      test('Body is correctly read and remains the same', () => {
+        expect(json1).toEqual(json2);
+      });
     });
   });
 
   describe('Endpoint is called twice sequentially with the same data and delay smaller than caching time', () => {
+    let response1: Response, response2: Response;
     beforeEach(async () => {
-      await getUserWith100MsCache({ id: 3 });
+      response1 = await getUserWith100MsCache({ id: 3 });
       await new Promise((resolve) => setTimeout(resolve, 80));
-      await getUserWith100MsCache({ id: 3 });
+      response2 = await getUserWith100MsCache({ id: 3 });
     });
 
     test('Fetch is called once', () => {
       expect(fetch).toHaveBeenCalledTimes(1);
+    });
+
+    describe('Response body is read', () => {
+      let json1: any, json2: any;
+      beforeEach(async () => {
+        json1 = await response1.json();
+        json2 = await response2.json();
+      });
+
+      test('Body is correctly read and remains the same', () => {
+        expect(json1).toEqual(json2);
+      });
     });
   });
 

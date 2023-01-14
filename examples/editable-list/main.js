@@ -28,7 +28,7 @@ import { JsonApiRegistry } from 'https://unpkg.com/api-registry/index.js?module'
       // build API
       const api = JsonApiRegistry.api('todos-api');
       this.api = {
-        getTodos: api.endpoint('{?limit,skip}').receives().withTTL(2000).buildWithParse(),
+        getTodos: api.endpoint('{?limit,skip}').receives().withCache(2000).buildWithParse(),
         addTodo: api.endpoint('/add', 'post').receives().buildWithParse(),
         deleteTodo: api.endpoint('/{id}', 'delete').receives().build()
       };

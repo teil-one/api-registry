@@ -1,13 +1,15 @@
 import { parse } from 'rfc6570-uri-template';
-import { ApiRequestCache } from './ApiRequestCache';
 import { JsonResponse } from './JsonResponse';
 import { JsonResponseError } from './JsonResponseError';
 import { RequestInterceptor } from './RequestInterceptor';
 import { RequestOptions } from './RequestOptions';
 import { SimpleObject } from './SimpleObject';
+import './memory-caches';
+import { getRequestKey } from './getRequestKey';
+
+const runningRequests = new Map<string, Promise<Response>>();
 
 class JsonEndpointBase {
-  private readonly _cache: ApiRequestCache;
   private readonly _parentOptions: RequestOptions[];
   private readonly _parentInterceptors: RequestInterceptor[];
 
@@ -22,7 +24,6 @@ class JsonEndpointBase {
     parentInterceptors: RequestInterceptor[]
   ) {
     if (typeof input === 'string') {
-      this._cache = new Map<string, { expires: Number; response: Promise<Response> }>();
       this._parentOptions = parentOptions;
       this._parentInterceptors = parentInterceptors;
 
@@ -31,7 +32,6 @@ class JsonEndpointBase {
       this._interceptors = [];
       this._ttl = 0;
     } else {
-      this._cache = input._cache;
       this._parentOptions = input._parentOptions;
       this._parentInterceptors = input._parentInterceptors;
 
@@ -45,24 +45,60 @@ class JsonEndpointBase {
   protected async send(data?: Record<string, unknown>, init?: RequestOptions): Promise<Response> {
     const request = await this.buildRequest(data, init);
 
-    const requestKey = await getRequestKey(request, data);
-    const cachedResponse = this._cache.get(requestKey);
-    if (cachedResponse != null && cachedResponse.expires >= performance.now()) {
-      return await cachedResponse.response;
+    if (this._ttl <= 0) {
+      return await this.fetchWithInterceptors(
+        request,
+        [...this._parentInterceptors, ...this._interceptors],
+        data,
+        init
+      );
     }
 
-    const responsePromise = this.fetchWithInterceptors(
-      request,
-      [...this._parentInterceptors, ...this._interceptors],
-      data,
-      init
-    );
+    const requestOrigin = new URL(request.url).origin;
+    const cache = await caches.open(requestOrigin);
 
-    if (this._ttl !== 0) {
-      this._cache.set(requestKey, { expires: performance.now() + this._ttl, response: responsePromise });
-    }
+    const requestKey = await getRequestKey(request);
 
-    return await responsePromise;
+    const responsePromise = (async (): Promise<Response> => {
+      const runningRequest = runningRequests.get(requestKey);
+      if (runningRequest != null) {
+        return (await runningRequest).clone();
+      }
+
+      const cachedResponse = await cache.match(request);
+      if (cachedResponse != null) {
+        const fetched = cachedResponse.headers.get('x-api-registry-fetched-on');
+        if (fetched != null && parseFloat(fetched) + this._ttl >= new Date().getTime()) {
+          return cachedResponse.clone();
+        }
+      }
+
+      const response = await this.fetchWithInterceptors(
+        request,
+        [...this._parentInterceptors, ...this._interceptors],
+        data,
+        init
+      );
+
+      const responseCopy = response.clone();
+      const responseHeaders = new Headers(responseCopy.headers);
+      responseHeaders.append('x-api-registry-fetched-on', new Date().getTime().toString());
+      const responseForCaching = new Response(await responseCopy.blob(), {
+        headers: responseHeaders,
+        status: responseCopy.status,
+        statusText: responseCopy.statusText
+      });
+
+      await cache.put(request, responseForCaching);
+
+      return response;
+    })();
+
+    runningRequests.set(requestKey, responsePromise);
+    const response = await responsePromise;
+    runningRequests.delete(requestKey);
+
+    return response;
   }
 
   private async buildRequest(data?: Record<string, unknown>, init?: RequestOptions): Promise<Request> {
@@ -176,7 +212,7 @@ export class JsonEndpoint<TResult = void> extends JsonEndpointBase {
     return this;
   }
 
-  public withTTL(ttl: number): JsonEndpoint<TResult> {
+  public withCache(ttl: number): JsonEndpoint<TResult> {
     this._ttl = ttl;
 
     return this;
@@ -208,21 +244,9 @@ class JsonEndpointWithData<TResult, T extends SimpleObject<T>> extends JsonEndpo
     return this;
   }
 
-  public withTTL(ttl: number): JsonEndpointWithData<TResult, T> {
+  public withCache(ttl: number): JsonEndpointWithData<TResult, T> {
     this._ttl = ttl;
 
     return this;
   }
-}
-
-async function getRequestKey(request: Request, data?: Record<string, unknown>): Promise<string> {
-  let key = request.url;
-
-  key += '|' + request.method;
-
-  if (data != null) {
-    key += '|' + new URLSearchParams(data as Record<string, string>).toString();
-  }
-
-  return key;
 }

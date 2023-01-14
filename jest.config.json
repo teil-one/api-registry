@@ -7,12 +7,12 @@
   "coverageProvider": "v8",
   "collectCoverageFrom": ["src/**/*.ts"],
   "coveragePathIgnorePatterns": [
-    "ApiRequestCache.ts",
     "JsonResponse.ts",
     "PrimitiveValue.ts",
     "RequestOptions.ts",
     "RequestInterceptor.ts",
-    "SimpleObject.ts"
+    "SimpleObject.ts",
+    "memory-caches.ts"
   ],
   "transform": {
     "^.+\\.tsx?$": [

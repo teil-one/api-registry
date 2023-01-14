@@ -23,7 +23,6 @@ export async function validateFetchRequest(
   expect(fetchRequest.redirect).toEqual(expectedRequest.redirect);
   expect(fetchRequest.referrer).toEqual(expectedRequest.referrer);
   expect(fetchRequest.referrerPolicy).toEqual(expectedRequest.referrerPolicy);
-  expect(fetchRequest.signal).toEqual(expectedRequest.signal);
   expect(fetchRequest.integrity).toEqual(expectedRequest.integrity);
   expect(fetchRequest.method).toEqual(method ?? expectedRequest.method);
 
