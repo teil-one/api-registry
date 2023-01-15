@@ -30,10 +30,11 @@ class MemoryCache {
 }
 
 (function (global: any) {
-  if (global.caches == null) {
-    global.caches = new MemoryCacheStorage() as any;
-  } else if (global.isSecureContext == null || global.isSecureContext === false) {
+  if (global.isSecureContext === false) {
     console.warn('Non-secure context. Memory cache will be used instead of Cache API');
+  }
+
+  if (global.caches == null) {
     global.caches = new MemoryCacheStorage() as any;
   }
 }.call(

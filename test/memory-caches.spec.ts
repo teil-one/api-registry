@@ -1,8 +1,8 @@
 import { jest } from '@jest/globals';
 
-describe('global.caches is defined, but running not in a secure context', () => {
+describe('Running not in a secure context', () => {
   beforeEach(() => {
-    global.caches = {} as any;
+    global.isSecureContext = false;
 
     console.warn = jest.fn();
   });
