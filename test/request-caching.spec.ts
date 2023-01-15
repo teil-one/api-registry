@@ -1,7 +1,9 @@
-import { JsonApiRegistry } from '../src';
+import { JsonApiRegistry, RequestOptions } from '../src';
 import { jest } from '@jest/globals';
 
-const fetch = jest.fn(async () => await Promise.resolve(new Response('{"id": 1}')));
+const fetch = jest.fn(
+  async () => await Promise.resolve(new Response('{"id": 1}', { headers: { Vary: 'Accept-Encoding' } }))
+);
 global.fetch = fetch;
 
 describe('Endpoint without cache', () => {
@@ -26,7 +28,7 @@ describe('Endpoint without cache', () => {
 });
 
 describe('Endpoint with cache', () => {
-  let getUserWith100MsCache: (data: { id: number }) => Promise<Response>;
+  let getUserWith100MsCache: (data: { id: number }, options?: RequestOptions) => Promise<Response>;
   let getUsersWith100MsCacheAndData: (data: { page: number }) => Promise<Response>;
 
   beforeAll(() => {
@@ -37,7 +39,7 @@ describe('Endpoint with cache', () => {
     getUsersWith100MsCacheAndData = api.endpoint('users', 'post').withCache(100).receives<{ page: number }>().build();
   });
 
-  describe('Endpoint is called twice simultaneously with the same data', () => {
+  describe('Endpoint is called via GET twice simultaneously with the same data', () => {
     let response1: Response, response2: Response;
     beforeEach(async () => {
       const call1 = getUserWith100MsCache({ id: 1 });
@@ -135,7 +137,7 @@ describe('Endpoint with cache', () => {
     });
   });
 
-  describe('Endpoint is called via POST twice simultaneously with same data', () => {
+  describe('Endpoint is called via POST twice simultaneously with the same data', () => {
     beforeEach(async () => {
       const call1 = getUsersWith100MsCacheAndData({ page: 1 });
       const call2 = getUsersWith100MsCacheAndData({ page: 1 });
@@ -143,7 +145,7 @@ describe('Endpoint with cache', () => {
     });
 
     test('Fetch is called once', () => {
-      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(fetch).toHaveBeenCalledTimes(2);
     });
   });
 

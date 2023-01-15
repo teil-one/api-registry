@@ -57,7 +57,7 @@ class JsonEndpointBase {
     const requestOrigin = new URL(request.url).origin;
     const cache = await caches.open(requestOrigin);
 
-    const requestKey = await getRequestKey(request);
+    const requestKey = getRequestKey(request);
 
     const responsePromise = (async (): Promise<Response> => {
       const runningRequest = runningRequests.get(requestKey);

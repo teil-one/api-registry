@@ -19,12 +19,12 @@ class MemoryCache {
   private readonly _cache = new Map<string, Response>();
 
   async match(request: Request): Promise<Response | undefined> {
-    const requestKey = await getRequestKey(request);
+    const requestKey = getRequestKey(request);
     return this._cache.get(requestKey);
   }
 
   async put(request: Request, response: Response): Promise<void> {
-    const requestKey = await getRequestKey(request);
+    const requestKey = getRequestKey(request);
     this._cache.set(requestKey, response);
   }
 }
