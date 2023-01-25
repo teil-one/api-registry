@@ -3,28 +3,43 @@ import { RequestOptions } from './RequestOptions';
 import { RequestInterceptor } from './RequestInterceptor';
 
 export class JsonApi {
-  private readonly _baseURL: string;
+  private readonly _name: string;
   private readonly _options: RequestOptions[];
   private readonly _interceptors: RequestInterceptor[];
 
-  constructor(baseURL: string) {
-    this._baseURL = baseURL;
+  private _baseURL?: string;
+
+  constructor(name: string) {
+    this._name = name;
     this._options = [];
     this._interceptors = [];
   }
 
-  public get baseURL(): string {
+  public get name(): string {
+    return this._name;
+  }
+
+  public get baseURL(): string | undefined {
     return this._baseURL;
+  }
+
+  public set baseURL(value: string | undefined) {
+    this._baseURL = value;
+  }
+
+  public get options(): RequestOptions[] {
+    return this._options;
+  }
+
+  public get interceptors(): RequestInterceptor[] {
+    return this._interceptors;
   }
 
   public endpoint(url: string, method: string = 'GET'): JsonEndpoint {
     url = url.replace(/^\//, ''); // Remove leading slash
     url = url.replace(/\/$/, ''); // Remove trailing slash;
 
-    const separator = url.startsWith('{?') ? '' : '/';
-    const fullUrl: string = `${this._baseURL}${separator}${url}`;
-
-    const endpoint = new JsonEndpoint(fullUrl, this._options, this._interceptors);
+    const endpoint = new JsonEndpoint(url, this);
 
     if (method.toLowerCase() !== 'get') {
       // Don't add the default GET method

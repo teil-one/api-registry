@@ -6,36 +6,30 @@ import { RequestOptions } from './RequestOptions';
 import { SimpleObject } from './SimpleObject';
 import './memory-caches';
 import { getRequestKey } from './getRequestKey';
+import { JsonApi } from './JsonApi';
 
 const runningRequests = new Map<string, Promise<Response>>();
 
 class JsonEndpointBase {
-  private readonly _parentOptions: RequestOptions[];
-  private readonly _parentInterceptors: RequestInterceptor[];
-
-  protected readonly _url: string;
+  protected readonly _api: JsonApi;
+  protected readonly _path: string;
   protected readonly _options: RequestOptions[];
   protected readonly _interceptors: RequestInterceptor[];
+
   protected _ttl: number;
 
-  constructor(
-    input: string | JsonEndpointBase,
-    parentOptions: RequestOptions[],
-    parentInterceptors: RequestInterceptor[]
-  ) {
+  constructor(input: string | JsonEndpointBase, api: JsonApi) {
     if (typeof input === 'string') {
-      this._parentOptions = parentOptions;
-      this._parentInterceptors = parentInterceptors;
+      this._api = api;
 
-      this._url = input;
+      this._path = input;
       this._options = [];
       this._interceptors = [];
       this._ttl = 0;
     } else {
-      this._parentOptions = input._parentOptions;
-      this._parentInterceptors = input._parentInterceptors;
+      this._api = input._api;
 
-      this._url = input._url;
+      this._path = input._path;
       this._options = input._options;
       this._interceptors = input._interceptors;
       this._ttl = input._ttl;
@@ -46,12 +40,7 @@ class JsonEndpointBase {
     const request = await this.buildRequest(data, init);
 
     if (this._ttl <= 0) {
-      return await this.fetchWithInterceptors(
-        request,
-        [...this._parentInterceptors, ...this._interceptors],
-        data,
-        init
-      );
+      return await this.fetchWithInterceptors(request, [...this._api.interceptors, ...this._interceptors], data, init);
     }
 
     const requestOrigin = new URL(request.url).origin;
@@ -75,7 +64,7 @@ class JsonEndpointBase {
 
       const response = await this.fetchWithInterceptors(
         request,
-        [...this._parentInterceptors, ...this._interceptors],
+        [...this._api.interceptors, ...this._interceptors],
         data,
         init
       );
@@ -101,17 +90,29 @@ class JsonEndpointBase {
     return response;
   }
 
+  private getFullUrl(): string {
+    if (this._api.baseURL == null) {
+      throw new Error(`Base URL is not defined for the API "${this._api.name}"`);
+    }
+
+    const separator = this._path.startsWith('{?') ? '' : '/';
+    const fullUrl = `${this._api.baseURL}${separator}${this._path}`;
+
+    return fullUrl;
+  }
+
   private async buildRequest(data?: Record<string, unknown>, init?: RequestOptions): Promise<Request> {
     let request: Request;
 
+    const fullUrl = this.getFullUrl();
     const endpointOptions = await this.reduceOptions(init);
 
     if (data == null) {
-      request = new Request(this._url, endpointOptions);
+      request = new Request(fullUrl, endpointOptions);
     } else {
-      let url: string = this._url;
+      let url: string = fullUrl;
       try {
-        url = parse(this._url).expand(data);
+        url = parse(fullUrl).expand(data);
       } catch {}
 
       const method = (endpointOptions.method ?? 'get').toLowerCase();
@@ -148,8 +149,8 @@ class JsonEndpointBase {
   private async reduceOptions(requestOptions?: RequestOptions): Promise<RequestInit> {
     const combinedOptions =
       requestOptions == null
-        ? [...this._parentOptions, ...this._options]
-        : [...this._parentOptions, ...this._options, requestOptions];
+        ? [...this._api.options, ...this._options]
+        : [...this._api.options, ...this._options, requestOptions];
 
     const optionsPromises = combinedOptions.map(async (item) =>
       item instanceof Function ? await item() : await Promise.resolve(item)
@@ -193,7 +194,7 @@ export class JsonEndpoint<TResult = void> extends JsonEndpointBase {
   }
 
   public receives<T extends SimpleObject<T>>(): JsonEndpointWithData<TResult, T> {
-    return new JsonEndpointWithData<TResult, T>(this, [], []);
+    return new JsonEndpointWithData<TResult, T>(this, this._api);
   }
 
   public returns<TNewResult>(): JsonEndpoint<TNewResult> {

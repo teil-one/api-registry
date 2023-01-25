@@ -92,7 +92,7 @@ describe('Endpoint with cache', () => {
     let response1: Response, response2: Response;
     beforeEach(async () => {
       response1 = await getUserWith100MsCache({ id: 3 });
-      await new Promise((resolve) => setTimeout(resolve, 80));
+      await new Promise((resolve) => setTimeout(resolve, 70));
       response2 = await getUserWith100MsCache({ id: 3 });
     });
 

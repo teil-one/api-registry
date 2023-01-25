@@ -16,17 +16,14 @@ export class JsonApiRegistry {
     let api = this._apis.get(name);
 
     if (api == null) {
-      if (baseURL == null) {
-        throw new Error('baseURL must be defined in the first API declaration');
-      }
-
-      api = new JsonApi(baseURL);
+      api = new JsonApi(name);
+      api.baseURL = baseURL;
 
       this._apis.set(name, api);
-    } else {
-      if (baseURL != null && api.baseURL !== baseURL) {
-        throw new Error(`API ${name} is already registered with another URL ${api.baseURL}`);
-      }
+    } else if (api.baseURL == null) {
+      api.baseURL = baseURL;
+    } else if (baseURL != null && api.baseURL !== baseURL) {
+      throw new Error(`API ${name} is already registered with another URL ${api.baseURL}`);
     }
 
     return api;
