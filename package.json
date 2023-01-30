@@ -1,6 +1,6 @@
 {
   "name": "api-registry",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "Centralized HTTP API client for the browser and Node.js based on Fetch API",
   "main": "index.js",
   "types": "index.d.js",
