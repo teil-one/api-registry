@@ -7,6 +7,7 @@
   "coverageProvider": "v8",
   "collectCoverageFrom": ["src/**/*.ts"],
   "coveragePathIgnorePatterns": [
+    "BaseUrl",
     "JsonResponse.ts",
     "PrimitiveValue.ts",
     "RequestOptions.ts",

@@ -33,6 +33,43 @@ describe('Given no API registered', () => {
       });
     });
   });
+
+  describe('When register API with URL factory, and register endpoints', () => {
+    let baseUrl: string;
+
+    const api = JsonApiRegistry.api('reqres-api-url-factory', async () => await Promise.resolve(baseUrl));
+    const endpoint = api.endpoint('/api').build();
+
+    test('Then API is registered', () => {
+      expect(api).toBeTruthy();
+    });
+
+    describe('And URL factory returns nothing', () => {
+      beforeEach(() => {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        baseUrl = null!;
+      });
+
+      describe('And try using API', () => {
+        test('Then throws error', async () => {
+          await expect(async () => await endpoint()).rejects.toThrowError(
+            'Base URL is not defined for the API "reqres-api-url-factory"'
+          );
+        });
+      });
+    });
+
+    describe('And URL factory returns URL', () => {
+      beforeEach(() => {
+        baseUrl = 'https://reqres.in/';
+      });
+
+      test('Then can use API', async () => {
+        const response = await endpoint();
+        expect(response).toBeTruthy();
+      });
+    });
+  });
 });
 
 describe('API registered', () => {

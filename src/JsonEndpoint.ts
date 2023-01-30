@@ -90,13 +90,15 @@ class JsonEndpointBase {
     return response;
   }
 
-  private getFullUrl(): string {
-    if (this._api.baseURL == null) {
+  private async getFullUrl(): Promise<string> {
+    const baseUrl = await this._api.getBaseUrl();
+
+    if (baseUrl == null) {
       throw new Error(`Base URL is not defined for the API "${this._api.name}"`);
     }
 
     const separator = this._path.startsWith('{?') ? '' : '/';
-    const fullUrl = `${this._api.baseURL}${separator}${this._path}`;
+    const fullUrl = `${baseUrl}${separator}${this._path}`;
 
     return fullUrl;
   }
@@ -104,7 +106,7 @@ class JsonEndpointBase {
   private async buildRequest(data?: Record<string, unknown>, init?: RequestOptions): Promise<Request> {
     let request: Request;
 
-    const fullUrl = this.getFullUrl();
+    const fullUrl = await this.getFullUrl();
     const endpointOptions = await this.reduceOptions(init);
 
     if (data == null) {

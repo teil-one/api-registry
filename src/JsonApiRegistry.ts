@@ -1,3 +1,4 @@
+import { BaseUrl } from './BaseUrl';
 import { JsonApi } from './JsonApi';
 
 export class JsonApiRegistry {
@@ -7,12 +8,7 @@ export class JsonApiRegistry {
     this._apis = new Map<string, JsonApi>();
   }
 
-  public api(name: string, baseURL?: string): JsonApi {
-    if (baseURL != null) {
-      baseURL = baseURL.replace(/\/$/, ''); // Remove trailing slash;
-      baseURL = baseURL.toLowerCase();
-    }
-
+  public api(name: string, baseURL?: BaseUrl): JsonApi {
     let api = this._apis.get(name);
 
     if (api == null) {
@@ -22,8 +18,13 @@ export class JsonApiRegistry {
       this._apis.set(name, api);
     } else if (api.baseURL == null) {
       api.baseURL = baseURL;
-    } else if (baseURL != null && api.baseURL !== baseURL) {
-      throw new Error(`API ${name} is already registered with another URL ${api.baseURL}`);
+    } else if (
+      baseURL != null &&
+      (baseURL instanceof Function ||
+        api.baseURL instanceof Function ||
+        api.baseURL.toLowerCase().replace(/\/$/, '') !== baseURL.toLocaleLowerCase().replace(/\/$/, ''))
+    ) {
+      throw new Error(`API ${name} is already registered with another URL ${api.baseURL.toString()}`);
     }
 
     return api;

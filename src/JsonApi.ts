@@ -1,13 +1,14 @@
 import { JsonEndpoint } from './JsonEndpoint';
 import { RequestOptions } from './RequestOptions';
 import { RequestInterceptor } from './RequestInterceptor';
+import { BaseUrl } from './BaseUrl';
 
 export class JsonApi {
   private readonly _name: string;
   private readonly _options: RequestOptions[];
   private readonly _interceptors: RequestInterceptor[];
 
-  private _baseURL?: string;
+  private _baseURL?: BaseUrl;
 
   constructor(name: string) {
     this._name = name;
@@ -19,11 +20,31 @@ export class JsonApi {
     return this._name;
   }
 
-  public get baseURL(): string | undefined {
+  public async getBaseUrl(): Promise<string | undefined> {
+    if (this._baseURL == null) {
+      return this._baseURL;
+    }
+
+    let baseURL: string;
+    if (this._baseURL instanceof Function) {
+      baseURL = await this._baseURL();
+    } else {
+      baseURL = this._baseURL;
+    }
+
+    if (baseURL != null) {
+      baseURL = baseURL.replace(/\/$/, ''); // Remove trailing slash;
+      baseURL = baseURL.toLowerCase();
+    }
+
+    return baseURL;
+  }
+
+  public get baseURL(): BaseUrl | undefined {
     return this._baseURL;
   }
 
-  public set baseURL(value: string | undefined) {
+  public set baseURL(value: BaseUrl | undefined) {
     this._baseURL = value;
   }
 
