@@ -6,6 +6,7 @@ import { JsonResponseError } from './JsonResponseError';
 import { RequestInterceptor } from './RequestInterceptor';
 import { RequestOptions } from './RequestOptions';
 
-const JsonApiRegistry = new JsonRegistry();
+const JsonApiRegistry = globalThis.apiRegistry ?? new JsonRegistry();
+globalThis.apiRegistry = JsonApiRegistry;
 
 export { JsonApiRegistry, JsonApi, JsonEndpoint, RequestOptions, RequestInterceptor, JsonResponse, JsonResponseError };

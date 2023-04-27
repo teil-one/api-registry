@@ -13,7 +13,8 @@
     "RequestOptions.ts",
     "RequestInterceptor.ts",
     "SimpleObject.ts",
-    "memory-caches.ts"
+    "memory-caches.ts",
+    "global.d.ts"
   ],
   "transform": {
     "^.+\\.tsx?$": [
