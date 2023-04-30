@@ -80,6 +80,6 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "rfc6570-uri-template": "^0.4.0"
+    "rfc6570-uri-template": "^1.0.0"
   }
 }
