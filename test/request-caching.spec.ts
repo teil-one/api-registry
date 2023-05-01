@@ -39,6 +39,27 @@ describe('Endpoint with cache', () => {
     getUsersWith100MsCacheAndData = api.endpoint('users', 'post').withCache(100).receives<{ page: number }>().build();
   });
 
+  describe('Endpoint is called', () => {
+    beforeEach(async () => {
+      await getUserWith100MsCache({ id: 0 });
+    });
+
+    test('The response data is cached', async () => {
+      const cache = await caches.open('http://foo.bar');
+      const cacheKeys = await cache.keys();
+      expect(cacheKeys).toHaveLength(1);
+      expect(cacheKeys[0].url).toBe('http://foo.bar/api/users/0');
+    });
+
+    test('The response cache expires after time', async () => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      const cache = await caches.open('http://foo.bar');
+      const cacheKeys = await cache.keys();
+      expect(cacheKeys).toHaveLength(0);
+    });
+  });
+
   describe('Endpoint is called via GET twice simultaneously with the same data', () => {
     let response1: Response, response2: Response;
     beforeEach(async () => {

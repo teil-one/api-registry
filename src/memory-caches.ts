@@ -16,16 +16,32 @@ class MemoryCacheStorage {
 }
 
 class MemoryCache {
-  private readonly _cache = new Map<string, Response>();
+  private readonly _cache = new Map<string, [Request, Response]>();
 
   async match(request: Request): Promise<Response | undefined> {
     const requestKey = getRequestKey(request);
-    return this._cache.get(requestKey);
+    const cacheItem = this._cache.get(requestKey);
+
+    return cacheItem != null ? cacheItem[1] : undefined;
   }
 
   async put(request: Request, response: Response): Promise<void> {
     const requestKey = getRequestKey(request);
-    this._cache.set(requestKey, response);
+    this._cache.set(requestKey, [request, response]);
+  }
+
+  async keys(): Promise<Request[]> {
+    const result = [];
+    for (const cacheItem of this._cache.values()) {
+      result.push(cacheItem[0]);
+    }
+
+    return await Promise.resolve(result);
+  }
+
+  async delete(request: Request): Promise<boolean> {
+    const requestKey = getRequestKey(request);
+    return this._cache.delete(requestKey);
   }
 }
 

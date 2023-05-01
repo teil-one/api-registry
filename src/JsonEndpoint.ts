@@ -80,6 +80,10 @@ class JsonEndpointBase {
 
       await cache.put(request, responseForCaching);
 
+      setTimeout(() => {
+        void cache.delete(request);
+      }, this._ttl);
+
       return response;
     })();
 
