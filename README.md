@@ -34,7 +34,7 @@ const createUser = api
   .receives<NewUser>()
   .buildWithParse(); // Builds a method that parses the returned JSON
 
-const user = await api.createUser({ email: 'new.user@reqres.in' });
+const user = await createUser({ email: 'new.user@reqres.in' });
 ```
 
 ## Share an API across micro frontends
@@ -109,6 +109,49 @@ const getUser = api
   .build();
 
 const response = await getUser({ id: 1 }, () => Promise.resolve({ headers: { 'uber-trace-id': '00000000000000009c54cc5904914703:cf0f9dbcc295b86c:0:1' }}));
+```
+
+## Intercept requests
+
+### On the API level
+
+All requests to the API will be handled by the passed interception function.
+
+```typescript
+JsonApiRegistry.api('rest-api', 'http://foo.bar/api')
+  .intercept(
+    async (request: Request, next: () => Promise<Response>): Promise<Response> => {
+      let response = await next();
+
+      if (response.status === 401) {
+        // ... Authenticate
+
+        // Repeat the request
+        response = await next();
+      }
+
+      return response;
+    }
+  );
+```
+
+### On the endpoint level
+
+All requests to the endpoint will be handled by the passed interception function.
+
+```typescript
+const getUser = api.endpoint('user/{id}')
+  .receives<{ id: number }>()
+  .intercept(
+    async (request: Request, next: () => Promise<Response>): Promise<Response> => {
+      let response = await next();
+
+      // ...
+
+      return response;
+    }
+  )
+  .build();
 ```
 
 ## Usage options
