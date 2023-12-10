@@ -6,14 +6,7 @@
     },
     "editor.formatOnSave": true
   },
-  "[typescript]": {
-    "editor.defaultFormatter": "rvest.vs-code-prettier-eslint",
-    "editor.codeActionsOnSave": {
-      "source.fixAll.eslint": true
-    },
-    "editor.formatOnSave": true
-  },
-  "[jsonc]": {
+  "[typescript][jsonc]": {
     "editor.defaultFormatter": "rvest.vs-code-prettier-eslint",
     "editor.codeActionsOnSave": {
       "source.fixAll.eslint": true

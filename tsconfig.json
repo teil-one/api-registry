@@ -10,6 +10,6 @@
     "removeComments": true,
     "moduleResolution": "Node"
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "**/*.spec.ts"]
+  "include": ["src", "test"],
+  "exclude": ["node_modules"]
 }

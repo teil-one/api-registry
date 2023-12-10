@@ -37,6 +37,44 @@ const createUser = api
 const user = await createUser({ email: 'new.user@reqres.in' });
 ```
 
+## Track progress
+Track progress with [fetch-api-progress](https://www.npmjs.com/package/fetch-api-progress)
+
+```typescript
+import { trackRequestProgress, trackResponseProgress } from 'fetch-api-progress';
+
+const api = JsonApiRegistry.api('httpbin.org', 'https://httpbin.org');
+const upload = api.endpoint('put', 'PUT').build();
+
+const blob = new Blob([new Uint8Array(5 * 1024 * 1024)]);
+
+const request = {
+  headers: {
+    'Content-Type': 'application/octet-stream'
+  },
+  body: blob
+};
+
+const trackedRequest = trackRequestProgress(
+  request,
+  (progress) => {
+    console.log(`Uploaded ${progress.loaded} bytes out of ${progress.total ?? 'unknown'}`)
+  }
+);
+
+const response = await upload(trackedRequest);
+
+const trackedResponse = trackResponseProgress(
+  response,
+  (progress) => {
+    console.log(`Downloaded ${progress.loaded} bytes out of ${progress.total ?? 'unknown'}`)
+  }
+);
+
+// Read the response. E.G. with a function from https://github.com/teil-one/api-registry/blob/main/test/progress/download.spec.ts
+await readResponse(trackedResponse);
+```
+
 ## Share an API across micro frontends
 
 The library registers API objects [globally](https://developer.mozilla.org/en-US/docs/Glossary/Global_object). It allows to register an API in one application and reuse it in another.
