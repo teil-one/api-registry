@@ -1,8 +1,3 @@
 {
-  "recommendations": [
-    "esbenp.prettier-vscode",
-    "dbaeumer.vscode-eslint",
-    "rvest.vs-code-prettier-eslint",
-    "orta.vscode-jest"
-  ]
+  "recommendations": ["esbenp.prettier-vscode", "dbaeumer.vscode-eslint", "rvest.vs-code-prettier-eslint"]
 }
