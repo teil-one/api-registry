@@ -54,7 +54,7 @@ class MemoryCache {
     global.caches = new MemoryCacheStorage() as any;
   }
 }.call(
-  this,
+  globalThis,
   typeof global !== 'undefined'
     ? global
     : typeof self !== 'undefined'

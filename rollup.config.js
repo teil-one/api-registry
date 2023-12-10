@@ -10,10 +10,11 @@ export default [
     },
     plugins: [
       terser({
-        ecma: 2017,
+        ecma: 2020,
         mangle: true
       })
-    ]
+    ],
+    external: ['rfc6570-uri-template']
   },
   {
     input: './build/index.js',
@@ -23,10 +24,11 @@ export default [
     },
     plugins: [
       terser({
-        ecma: 2017,
+        ecma: 2020,
         mangle: true
       })
-    ]
+    ],
+    external: ['rfc6570-uri-template']
   },
   {
     input: './build/index.d.ts',
