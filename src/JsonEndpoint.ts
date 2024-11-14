@@ -127,9 +127,9 @@ class JsonEndpointBase {
         request = new Request(url, endpointOptions);
       } else {
         request = new Request(url, {
+          body: JSON.stringify(data),
           ...endpointOptions,
-          headers: { 'Content-Type': 'application/json', ...endpointOptions.headers },
-          body: JSON.stringify(data)
+          headers: { 'Content-Type': 'application/json', ...endpointOptions.headers }
         });
       }
     }
