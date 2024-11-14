@@ -17,7 +17,7 @@ describe('Upload to httpbin.org API', () => {
     });
 
     expect(response.status).toBe(200);
-  });
+  }, 60000);
 
   test('With progress', async () => {
     const onProgress = jest.fn<(progress: FetchProgressEvent) => void>();
@@ -39,5 +39,5 @@ describe('Upload to httpbin.org API', () => {
 
     expect(onProgress).toHaveBeenNthCalledWith(1, { lengthComputable: true, loaded: 0, total: blob.size });
     expect(onProgress).toHaveBeenLastCalledWith({ lengthComputable: true, loaded: blob.size, total: blob.size });
-  });
+  }, 60000);
 });

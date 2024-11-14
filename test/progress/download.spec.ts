@@ -31,7 +31,7 @@ describe('Download from httpbin.org API', () => {
     expect(onProgress).toHaveBeenCalled();
     expect(onProgress).toHaveBeenNthCalledWith(1, { lengthComputable: true, loaded: 0, total: expectedSize });
     expect(onProgress).toHaveBeenLastCalledWith({ lengthComputable: true, loaded: expectedSize, total: expectedSize });
-  });
+  }, 60000);
 });
 
 async function readResponse(response: Response): Promise<number> {
