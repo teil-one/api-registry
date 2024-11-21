@@ -108,6 +108,21 @@ describe('API registered', () => {
     });
   });
 
+  describe("Register API with the same key and a different URL when it's explicitly allowed", () => {
+    let retreivedApi: JsonApi;
+    beforeAll(() => {
+      retreivedApi = JsonApiRegistry.api('reqres', 'https://reqres.in/', true);
+    });
+
+    test('Retrieves the registered API', () => {
+      expect(retreivedApi).toBe(registeredApi);
+    });
+
+    test('Retrieved API has the new URLL', () => {
+      expect(retreivedApi.baseURL).toBe('https://reqres.in/');
+    });
+  });
+
   describe('Register API with a different key', () => {
     let anotherApi: JsonApi;
     beforeAll(() => {

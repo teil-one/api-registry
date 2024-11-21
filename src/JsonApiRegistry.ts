@@ -8,7 +8,7 @@ export class JsonApiRegistry {
     this._apis = new Map<string, JsonApi>();
   }
 
-  public api(name: string, baseURL?: BaseUrl): JsonApi {
+  public api(name: string, baseURL?: BaseUrl, allowChangingBaseURL = false): JsonApi {
     let api = this._apis.get(name);
 
     if (api == null) {
@@ -18,6 +18,10 @@ export class JsonApiRegistry {
       this._apis.set(name, api);
     } else if (api.baseURL == null) {
       api.baseURL = baseURL;
+    } else if (allowChangingBaseURL) {
+      if (baseURL != null) {
+        api.baseURL = baseURL;
+      }
     } else if (
       baseURL != null &&
       (baseURL instanceof Function ||
