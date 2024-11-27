@@ -126,11 +126,20 @@ class JsonEndpointBase {
         // GET and HEAD requests cannot have body
         request = new Request(url, endpointOptions);
       } else {
-        request = new Request(url, {
-          body: JSON.stringify(data),
-          ...endpointOptions,
-          headers: { 'Content-Type': 'application/json', ...endpointOptions.headers }
-        });
+        const optionsHaveBody = endpointOptions.body != null;
+
+        if (optionsHaveBody) {
+          request = new Request(url, {
+            ...endpointOptions,
+            headers: { ...endpointOptions.headers }
+          });
+        } else {
+          request = new Request(url, {
+            body: JSON.stringify(data),
+            ...endpointOptions,
+            headers: { 'Content-Type': 'application/json', ...endpointOptions.headers }
+          });
+        }
       }
     }
 

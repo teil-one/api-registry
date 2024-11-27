@@ -49,4 +49,30 @@ describe('When endpoint is called with parameters in URL and FormData body', () 
 
     expect(bodyString).toContain('Content-Disposition: form-data; name="foo"');
   });
+
+  test('Fetch should be called with the body matching the form data', async () => {
+    const calls = fetch.mock.calls;
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toHaveLength(1);
+
+    const actualRequest = (calls[0] as Request[])[0];
+
+    const body = (await (await actualRequest.body?.getReader())?.read())?.value;
+    if (body == null) {
+      throw new Error();
+    }
+    const bodyString = Buffer.from(body).toString();
+
+    expect(bodyString).toContain('Content-Disposition: form-data; name="foo"');
+  });
+
+  test('Fetch should be called with a "multipart/form-data" Content-Type header containing boundary', async () => {
+    const calls = fetch.mock.calls;
+
+    const actualRequest = (calls[0] as Request[])[0];
+
+    const contentType = actualRequest.headers.get('Content-Type');
+
+    expect(contentType).toMatch(/^multipart\/form-data; boundary=----/);
+  });
 });
