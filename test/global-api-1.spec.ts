@@ -1,6 +1,6 @@
 describe('Given the module is not imported', () => {
   test('Then globalThis.apiRegistry is not set', () => {
-    expect(globalThis.apiRegistry).toBeFalsy();
+    expect(globalThis.apiRegistryV2).toBeFalsy();
   });
 
   describe('When the module is imported', () => {
@@ -11,7 +11,7 @@ describe('Given the module is not imported', () => {
     });
 
     test('Then globalThis.apiRegistry is set', () => {
-      expect(globalThis.apiRegistry).toBe(registry);
+      expect(globalThis.apiRegistryV2).toBe(registry);
     });
   });
 });

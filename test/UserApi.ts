@@ -9,7 +9,7 @@ export const API_CONFIG = {
 let authorization = 'Basic Sm9objpEb2U=';
 
 const authOptions = async (): Promise<RequestInit> =>
-  await Promise.resolve({ headers: { Authorization: authorization } });
+  await Promise.resolve({ headers: { 'x-api-key': 'reqres-free-v1', Authorization: authorization } });
 
 function updateAuthorization(): void {
   authorization =

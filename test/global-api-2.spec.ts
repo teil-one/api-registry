@@ -3,7 +3,7 @@ import { JsonApiRegistry } from '../src/JsonApiRegistry';
 describe('Given globalThis.apiRegistry is set', () => {
   const existingRegistry = new JsonApiRegistry();
   beforeEach(async () => {
-    globalThis.apiRegistry = existingRegistry;
+    globalThis.apiRegistryV2 = existingRegistry;
   });
 
   describe('When the module is imported', () => {
